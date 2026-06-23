@@ -136,3 +136,7 @@ sudo systemctl enable --now atvloadly-status-check.timer
   you change it in Settings → Task, update `atvloadly-status-check.timer` and run
   `sudo systemctl daemon-reload`.
 - Upstream publishes only `:latest` — upgrade with `docker compose pull && docker compose up -d`.
+
+---
+_Tested on: `raspberrypi` (linux/arm64) — deploy, backup, and restore are from the
+working setup documented in [hshamsaldin/atvloadly](https://github.com/hshamsaldin/atvloadly)._
