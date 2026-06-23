@@ -7,6 +7,13 @@ container — no exceptions, no snowflakes.
 New host? Start with [docs/host-setup.md](docs/host-setup.md), then deploy any
 container below.
 
+> ## ⚠️ Only tested commands
+> Nothing goes into this repo until it has been **run on the real host and worked**.
+> No guessing, no "should work." Every command in a container README is copied from
+> an actual successful run. Anything not yet verified is marked `⚠️ UNTESTED` or left
+> out entirely. Each container README ends with a **Tested on** line recording the
+> host + date its commands were last verified.
+
 ## Containers
 
 | Container | Purpose | Image | Port | Storage |

@@ -50,3 +50,6 @@ docker compose ps
 
 - <Any deliberate deviation from the repo standard, and why.>
 - <Gotchas, links to deeper docs.>
+
+---
+_Tested on: `<host>`, `<YYYY-MM-DD>` — all commands above run and verified._
