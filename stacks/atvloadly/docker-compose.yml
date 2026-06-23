@@ -1,0 +1,11 @@
+services:
+  atvloadly:
+    image: bitxeno/atvloadly:latest      # TODO: pin to a real version tag
+    container_name: atvloadly
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "5533:80"                        # web UI; keep LAN-wide if accessed from other devices
+    volumes:
+      - ./data:/app/data                 # TODO: confirm correct data path from image docs

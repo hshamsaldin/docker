@@ -1,0 +1,44 @@
+# Copy to stacks/<app>/docker-compose.yml and fill in.
+services:
+  app:
+    image: vendor/image:1.2.3          # PIN the version — never bare :latest
+    container_name: app                 # = folder/app name
+    hostname: app
+    restart: unless-stopped
+
+    # --- security baseline ---
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # cap_add:                          # uncomment only the caps you truly need
+    #   - NET_ADMIN
+    mem_limit: 512m
+    pids_limit: 200
+
+    # --- config / secrets (values come from .env, which is gitignored) ---
+    environment:
+      - TZ=${TZ}
+      # - PUID=${PUID}
+      # - PGID=${PGID}
+
+    # --- storage: default to a bind mount next to this file ---
+    volumes:
+      - ./data:/var/lib/app
+
+    # --- networking: own bridge by default; bind published ports to localhost ---
+    ports:
+      - "127.0.0.1:8080:80"
+    networks:
+      - app_net
+
+    # --- health (lets `docker ps` and `up -d` know it's actually working) ---
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  app_net:
+    name: app_net

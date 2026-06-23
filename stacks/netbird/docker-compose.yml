@@ -1,0 +1,20 @@
+services:
+  netbird:
+    image: netbirdio/netbird:0.73.2     # pinned — bump deliberately to upgrade
+    container_name: NetBird
+    hostname: pi
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN                        # required for the WireGuard tunnel
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - netbird-client:/var/lib/netbird
+
+volumes:
+  netbird-client:
+    external: true                       # reuse existing volume — no re-setup
