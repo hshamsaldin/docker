@@ -1,9 +1,47 @@
-# Docker Standards
+# Docker
 
-How every container on my hosts is organized, stored, secured, and upgraded.
-Follow these rules for every new stack — no exceptions, no snowflakes.
+One place for every Docker container I run, with a single standard for how each
+one is organized, stored, secured, and upgraded. Follow these rules for every new
+container — no exceptions, no snowflakes.
 
-## 1. One stack = one folder = one compose file
+New host? Start with [docs/host-setup.md](docs/host-setup.md), then deploy any
+container below.
+
+## Containers
+
+| Container | Purpose | Image | Port | Storage |
+|-----------|---------|-------|------|---------|
+| [netbird](containers/netbird) | WireGuard mesh VPN client | `netbirdio/netbird:0.73.2` | — | `netbird-client` (volume) |
+| [atvloadly](containers/atvloadly) | Apple TV IPA sideloading | `bitxeno/atvloadly:latest` | 5533 | `/etc/atvloadly` (bind) |
+
+> Keep this table updated whenever you add or remove a container.
+
+## Adding a new container
+
+1. `cp -r templates containers/<app>` — gives you `docker-compose.yml`, `.env.example`, `README.md`.
+2. Fill in the compose file: pinned `image:`, `container_name`, `hostname`, storage, network.
+3. Fill in the README from the template — **keep the section order** (see Style below).
+4. Add only the `cap_add` / `devices` the app genuinely needs.
+5. Secrets go in `.env` (copy from `.env.example`); confirm `.env` is gitignored.
+6. `docker compose up -d`, then check `docker compose ps` + the app's health.
+7. Add a row to the **Containers** table above.
+8. Commit the folder (compose + README + `.env.example`) — never `.env` or `data/`.
+
+## README style (every container README)
+
+Each `containers/<app>/README.md` is a copy of [templates/README.md](templates/README.md)
+and uses this **fixed structure**:
+
+1. `# <Name>` + one-sentence description
+2. **At-a-glance table**: Image · Web UI · Storage · Network · Host deps
+3. `## Prerequisites` → `## Deploy` → `## Upgrade` → `## Verify` → `## Backup` → `## Notes`
+
+Rules: keep it short, link out to deeper docs instead of pasting walls of text,
+and record any deliberate deviation from this standard under `## Notes`.
+
+---
+
+## 1. One container = one folder = one compose file
 
 - Every app lives in `containers/<app>/docker-compose.yml`.
 - Folder name = compose project name = lowercase app name (`netbird`, `atvloadly`).
@@ -22,7 +60,7 @@ Follow these rules for every new stack — no exceptions, no snowflakes.
 
 ## 3. Storage — data is never inside the container
 
-Two allowed patterns. Pick one per stack and document it.
+Two allowed patterns. Pick one per container and document it.
 
 **A. Bind mount (default — clear path, easy backup):**
 ```yaml
@@ -41,11 +79,11 @@ volumes:
 ```
 
 Rules:
-- New stacks default to **bind mounts** (pattern A) for visibility + backup.
-- Keep existing named-volume stacks as-is (e.g. NetBird) — migrating means re-setup.
+- New containers default to **bind mounts** (pattern A) for visibility + backup.
+- Keep existing named-volume containers as-is (e.g. NetBird) — migrating means re-setup.
 - **Never** write data to a path that isn't a mount. Anything not on a mount is lost on upgrade — by design.
 
-## 4. Security baseline (apply to every stack)
+## 4. Security baseline (apply to every container)
 
 ```yaml
     restart: unless-stopped
@@ -71,7 +109,7 @@ More rules:
 
 ## 5. Networks
 
-- Each stack gets its **own** bridge network (`<app>_net`) for isolation by default.
+- Each container gets its **own** bridge network (`<app>_net`) for isolation by default.
 - Apps that must talk to a reverse proxy join a **shared external** network named `proxy`.
 - Only publish ports you actually need; everything internal stays on the bridge.
 
@@ -91,6 +129,7 @@ docker compose pull && docker compose up -d
 - For pinned versions: bump the tag in `docker-compose.yml`, then run the two commands.
 - Verify after: `docker compose ps` + the app's own status/health check.
 - Reclaim space occasionally: `docker image prune` (safe — never removes volumes).
+- Update everything at once: [`scripts/update-all.sh`](scripts/update-all.sh).
 
 ## 7. Backup before risky changes
 
@@ -107,24 +146,17 @@ tar czf <app>-$(date +%F).tar.gz -C ~/docker/<app>/data .
 
 ```
 docker/
-├── README.md                  # this file — the standard
+├── README.md                  # this file — the standard + container index
 ├── .gitignore                 # never commit secrets/data
-├── templates/
-│   ├── docker-compose.yml     # copy to start any new stack
-│   └── .env.example
+├── docs/
+│   └── host-setup.md          # one-time host prep (Docker engine, proxy net)
+├── templates/                 # copy these to start a new container
+│   ├── docker-compose.yml
+│   ├── .env.example
+│   └── README.md
 ├── containers/                # one folder per app
 │   ├── netbird/
 │   └── atvloadly/
 └── scripts/
     └── update-all.sh          # pull+up every container
 ```
-
-## Starting a new stack (checklist)
-
-1. `cp -r templates containers/<app>` then rename `templates` content into place.
-2. Set `image:` to a **pinned** version, `container_name`, `hostname`.
-3. Choose storage: bind mount `./data` (default) or external named volume.
-4. Add only the `cap_add` / `devices` the app genuinely needs.
-5. Put secrets in `.env` (copy from `.env.example`); confirm `.env` is gitignored.
-6. `docker compose up -d`, then check `docker compose ps` + the app's health.
-7. Commit the stack folder (compose + README + `.env.example`) — never `.env` or `data/`.
