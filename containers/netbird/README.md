@@ -4,6 +4,7 @@ WireGuard-based mesh VPN client — registers this host as a NetBird peer.
 
 |              |                                              |
 |--------------|----------------------------------------------|
+| **Upstream** | [netbirdio/netbird](https://github.com/netbirdio/netbird) |
 | **Image**    | `netbirdio/netbird:latest`                   |
 | **Web UI**   | `—` (CLI: `docker exec NetBird netbird status`) |
 | **Storage**  | `netbird-client` (named volume) → `/var/lib/netbird` |

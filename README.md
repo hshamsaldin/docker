@@ -40,7 +40,8 @@ Each `containers/<app>/README.md` is a copy of [templates/README.md](templates/R
 and uses this **fixed structure**:
 
 1. `# <Name>` + one-sentence description
-2. **At-a-glance table**: Image · Web UI · Storage · Network · Host deps
+2. **At-a-glance table**: Upstream · Image · Web UI · Storage · Network · Host deps
+   (always credit/link the original upstream project)
 3. `## Prerequisites` → `## Deploy` → `## Upgrade` → `## Verify` → `## Backup` → `## Notes`
 
 Rules: keep it short, link out to deeper docs instead of pasting walls of text,

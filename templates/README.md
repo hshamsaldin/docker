@@ -10,6 +10,7 @@ for deep guides instead of pasting walls of text.
 
 |              |                                          |
 |--------------|------------------------------------------|
+| **Upstream** | [vendor/project](https://github.com/vendor/project) |
 | **Image**    | `vendor/image:tag`                       |
 | **Web UI**   | `http://<host>:PORT` (or `—`)            |
 | **Storage**  | `<source>` → `<container path>`          |

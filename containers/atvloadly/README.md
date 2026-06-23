@@ -7,6 +7,7 @@ Upstream: [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly).
 
 |              |                                          |
 |--------------|------------------------------------------|
+| **Upstream** | [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly) |
 | **Image**    | `bitxeno/atvloadly:latest`               |
 | **Web UI**   | `http://<host>:5533`                     |
 | **Storage**  | `/etc/atvloadly` (host bind) → `/data`   |
