@@ -7,7 +7,7 @@ Upstream: [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly).
 
 |              |                                          |
 |--------------|------------------------------------------|
-| **Image**    | `bitxeno/atvloadly:latest` (upstream ships only `latest`) |
+| **Image**    | `bitxeno/atvloadly:latest`               |
 | **Web UI**   | `http://<host>:5533`                     |
 | **Storage**  | `/etc/atvloadly` (host bind) → `/data`   |
 | **Network**  | `host` (publishes `5533:80`)             |
@@ -135,5 +135,4 @@ sudo systemctl enable --now atvloadly-status-check.timer
 - **Timer schedule is not auto-linked** to atvloadly's in-app refresh schedule. If
   you change it in Settings → Task, update `atvloadly-status-check.timer` and run
   `sudo systemctl daemon-reload`.
-- Upstream publishes only `:latest`, so this stack can't pin a version tag the way
-  the standard prefers; pin by image digest if you need clean rollbacks.
+- Upstream publishes only `:latest` — upgrade with `docker compose pull && docker compose up -d`.

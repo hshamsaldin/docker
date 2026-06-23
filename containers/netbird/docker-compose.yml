@@ -1,6 +1,6 @@
 services:
   netbird:
-    image: netbirdio/netbird:0.73.2     # pinned — bump deliberately to upgrade
+    image: netbirdio/netbird:latest     # always pull latest to upgrade
     container_name: NetBird
     hostname: pi
     restart: unless-stopped

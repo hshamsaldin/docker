@@ -4,7 +4,7 @@ WireGuard-based mesh VPN client — registers this host as a NetBird peer.
 
 |              |                                              |
 |--------------|----------------------------------------------|
-| **Image**    | `netbirdio/netbird:0.73.2` (pinned)          |
+| **Image**    | `netbirdio/netbird:latest`                   |
 | **Web UI**   | `—` (CLI: `netbird status`)                  |
 | **Storage**  | `netbird-client` (named volume) → `/var/lib/netbird` |
 | **Network**  | `host` (uses `NET_ADMIN` + `/dev/net/tun`)   |
@@ -29,8 +29,6 @@ docker compose up -d
 ```
 
 ## Upgrade
-
-Bump the pinned tag in `docker-compose.yml`, then:
 
 ```bash
 cd ~/docker/netbird

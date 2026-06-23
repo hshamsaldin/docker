@@ -11,7 +11,7 @@ container below.
 
 | Container | Purpose | Image | Port | Storage |
 |-----------|---------|-------|------|---------|
-| [netbird](containers/netbird) | WireGuard mesh VPN client | `netbirdio/netbird:0.73.2` | — | `netbird-client` (volume) |
+| [netbird](containers/netbird) | WireGuard mesh VPN client | `netbirdio/netbird:latest` | — | `netbird-client` (volume) |
 | [atvloadly](containers/atvloadly) | Apple TV IPA sideloading | `bitxeno/atvloadly:latest` | 5533 | `/etc/atvloadly` (bind) |
 
 > Keep this table updated whenever you add or remove a container.
@@ -19,7 +19,7 @@ container below.
 ## Adding a new container
 
 1. `cp -r templates containers/<app>` — gives you `docker-compose.yml`, `.env.example`, `README.md`.
-2. Fill in the compose file: pinned `image:`, `container_name`, `hostname`, storage, network.
+2. Fill in the compose file: `image:` (use `:latest`), `container_name`, `hostname`, storage, network.
 3. Fill in the README from the template — **keep the section order** (see Style below).
 4. Add only the `cap_add` / `devices` the app genuinely needs.
 5. Secrets go in `.env` (copy from `.env.example`); confirm `.env` is gitignored.
@@ -56,7 +56,7 @@ and record any deliberate deviation from this standard under `## Notes`.
 | `container_name` | = app name                             | `NetBird`                  |
 | Named volume     | `<app>-<purpose>`                      | `netbird-client`           |
 | Network          | `<app>_net`, or shared `proxy`         | `atvloadly_net`            |
-| Image            | **always pinned**, never bare `latest` | `netbirdio/netbird:0.73.2` |
+| Image            | use `:latest`; `pull` to upgrade       | `netbirdio/netbird:latest` |
 
 ## 3. Storage — data is never inside the container
 
@@ -99,7 +99,9 @@ Rules:
 ```
 
 More rules:
-- **Pin image versions.** Upgrades become deliberate, rollback = change the tag back.
+- **Always pull latest.** Use `:latest` and run `docker compose pull && docker compose up -d`
+  to upgrade. Trade-off: no clean version rollback — if you need to revert, pin to a
+  known-good tag (or image digest) temporarily, then go back to `:latest`.
 - **Least capability.** Start from `cap_drop: ALL`, add only the specific caps the app needs.
 - **Bind ports to localhost** when an app sits behind a reverse proxy:
   `ports: ["127.0.0.1:5533:80"]` — not reachable from the LAN directly.
@@ -126,7 +128,7 @@ docker compose pull && docker compose up -d
 ```
 - `up -d` recreates the container only if the image changed; volumes are never touched.
 - **Never** `docker compose down -v` (the `-v` deletes volumes). Plain `down` / `up -d` are safe.
-- For pinned versions: bump the tag in `docker-compose.yml`, then run the two commands.
+- Images use `:latest`, so `pull` always fetches the newest build.
 - Verify after: `docker compose ps` + the app's own status/health check.
 - Reclaim space occasionally: `docker image prune` (safe — never removes volumes).
 - Update everything at once: [`scripts/update-all.sh`](scripts/update-all.sh).

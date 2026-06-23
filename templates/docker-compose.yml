@@ -1,7 +1,7 @@
-# Copy to stacks/<app>/docker-compose.yml and fill in.
+# Copy to containers/<app>/docker-compose.yml and fill in.
 services:
   app:
-    image: vendor/image:1.2.3          # PIN the version — never bare :latest
+    image: vendor/image:latest         # use :latest; `docker compose pull` to upgrade
     container_name: app                 # = folder/app name
     hostname: app
     restart: unless-stopped
