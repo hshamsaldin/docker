@@ -1,11 +1,19 @@
+# atvloadly — IPA sideloading for Apple TV.
+# NOTE: this stack deliberately deviates from the security baseline in ../../README.md.
+# Sideloading needs broad device/host access, so upstream requires seccomp:unconfined
+# and host dbus/avahi sockets. Keep these as-is; tightening them breaks pairing.
 services:
   atvloadly:
-    image: bitxeno/atvloadly:latest      # TODO: pin to a real version tag
+    image: bitxeno/atvloadly:latest      # upstream ships only :latest; bump via `pull`
     container_name: atvloadly
+    hostname: atvloadly
     restart: unless-stopped
     security_opt:
-      - no-new-privileges:true
+      - seccomp:unconfined               # required for usbmuxd / device access
     ports:
-      - "5533:80"                        # web UI; keep LAN-wide if accessed from other devices
+      - "5533:80"                         # web UI — LAN-wide (needed from other devices)
     volumes:
-      - ./data:/app/data                 # TODO: confirm correct data path from image docs
+      - /etc/atvloadly:/data              # ALL persistent state (pairing, Apple ID session,
+                                          # app.db, settings) — this is the backup target
+      - /var/run/dbus:/var/run/dbus       # host dbus — device discovery
+      - /var/run/avahi-daemon:/var/run/avahi-daemon   # host avahi — Bonjour/mDNS discovery
