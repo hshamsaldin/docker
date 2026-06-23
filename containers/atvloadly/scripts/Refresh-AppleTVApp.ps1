@@ -5,7 +5,7 @@
 # task, which only notifies on failure.
 
 param(
-    [string]$PiHost     = "192.168.0.10",
+    [string]$PiHost     = "<pi-ip>",
     [int]$AtvloadlyPort = 5533,
     [int]$AppId         = 0   # 0 = refresh all expired enabled apps; set to force a specific app id
 )

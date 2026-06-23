@@ -80,7 +80,8 @@ sudo systemctl enable --now avahi-daemon
 ```bash
 mkdir -p /opt/atvloadly && cd /opt/atvloadly
 
-wget https://raw.githubusercontent.com/bitxeno/atvloadly/refs/heads/master/docker-compose.yml
+# use the docker-compose.yml from this repo
+wget https://raw.githubusercontent.com/hshamsaldin/atvloadly/main/docker-compose.yml
 
 docker compose pull
 docker compose up -d
@@ -110,7 +111,7 @@ fast, and everything you actually need to avoid re-pairing/re-login on a fresh
 install:
 
 ```bash
-sudo tar -czf /home/hussein/atvloadly-backup-$(date +%Y-%m-%d)-clean.tar.gz \
+sudo tar -czf ~/atvloadly-backup-$(date +%Y-%m-%d)-clean.tar.gz \
   -C /etc/atvloadly \
   --exclude='ipa' \
   --exclude='*.ipa' \
@@ -136,7 +137,7 @@ And drops:
 Copy it off the Pi for safekeeping:
 
 ```bash
-scp hussein@<pi-ip>:/home/hussein/atvloadly-backup-*-clean.tar.gz "C:\Users\hussein\Documents\"
+scp <user>@<pi-ip>:~/atvloadly-backup-*-clean.tar.gz "C:\path\to\backups\"
 ```
 
 ## Restore
@@ -168,7 +169,7 @@ sudo docker logs -f atvloadly
 Confirmation that the restore worked: the logs should show
 
 ```
-Restoring session for hos***********@hotmail.com...
+Restoring session for <your-apple-id>...
 Registering device: AppleTV (00008110-...)
 ...
 Installing ipa success: <name>
@@ -199,10 +200,10 @@ unlike the built-in scheduler which stays silent on success:
 
 ```powershell
 # Refresh a specific app by id (forces it regardless of expiry)
-& .\Refresh-AppleTVApp.ps1 -PiHost 192.168.0.10 -AppId 4
+& .\Refresh-AppleTVApp.ps1 -PiHost <pi-ip> -AppId 4
 
 # Refresh all apps that are actually expired/near-expiry (mirrors the built-in scheduler)
-& .\Refresh-AppleTVApp.ps1 -PiHost 192.168.0.10
+& .\Refresh-AppleTVApp.ps1 -PiHost <pi-ip>
 ```
 
 It initializes an MCP session, calls the `refresh_app` tool, polls
@@ -226,8 +227,8 @@ timer that runs 15 minutes after each scheduled window and reports the actual
 result:
 
 ```bash
-# 1. Script: scripts/atvloadly-status-check.sh -> /home/hussein/atvloadly-status-check.sh
-chmod +x /home/hussein/atvloadly-status-check.sh
+# 1. Script: scripts/atvloadly-status-check.sh -> ~/atvloadly-status-check.sh
+chmod +x ~/atvloadly-status-check.sh
 
 # 2. Service + timer units -> /etc/systemd/system/
 sudo cp scripts/atvloadly-status-check.service /etc/systemd/system/
@@ -246,7 +247,7 @@ journalctl -u atvloadly-status-check.service -n 20 --no-pager
 The script queries `/api/apps`, builds a per-app `OK` / `FAIL` report from the
 `refreshed_result` / `refreshed_error` / `expiration_date` fields, sends it via
 `/api/notify/send` (always, success or failure), and appends a timestamped line
-to `/home/hussein/atvloadly-status-check.log` on every run regardless of
+to `~/atvloadly-status-check.log` on every run regardless of
 whether it notified.
 
 **Note:** the timer's `OnCalendar` schedule is hardcoded to 15 minutes after

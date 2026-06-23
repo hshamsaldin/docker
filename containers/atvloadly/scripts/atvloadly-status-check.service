@@ -3,5 +3,5 @@ Description=atvloadly post-refresh status check and notify
 
 [Service]
 Type=oneshot
-User=hussein
-ExecStart=/home/hussein/atvloadly-status-check.sh
+User=YOUR_USER
+ExecStart=/home/YOUR_USER/atvloadly-status-check.sh

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 BASE="http://localhost:5533"
-LOG="/home/hussein/atvloadly-status-check.log"
+LOG="$HOME/atvloadly-status-check.log"
 
 REPORT=$(curl -s "$BASE/api/apps" | python3 -c '
 import json, sys

@@ -82,9 +82,9 @@ $confirm = Read-Host "  Ready? (Y to continue)"
 if ($confirm -notmatch '^[Yy]') { Write-Host "  Aborted." -ForegroundColor Red; exit 0 }
 Write-Host ""
 
-if (-not $PiHost)  { $PiHost  = Prompt-Input "Pi IP address" "192.168.0.10" }
-if (-not $PiUser)  { $PiUser  = Prompt-Input "Pi username"   "hussein" }
-if (-not $IpaPath) { $IpaPath = Prompt-Input "Path to IPA"   "C:\Users\hussein\Downloads\YouTube.ipa" }
+if (-not $PiHost)  { $PiHost  = Prompt-Input "Pi IP address" "<pi-ip>" }
+if (-not $PiUser)  { $PiUser  = Prompt-Input "Pi username"   "pi" }
+if (-not $IpaPath) { $IpaPath = Prompt-Input "Path to IPA"   "C:\path\to\YourApp.ipa" }
 
 $IpaPath = $IpaPath.Trim('"').Trim("'")
 
