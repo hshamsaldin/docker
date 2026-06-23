@@ -5,16 +5,16 @@ Follow these rules for every new stack — no exceptions, no snowflakes.
 
 ## 1. One stack = one folder = one compose file
 
-- Every app lives in `stacks/<app>/docker-compose.yml`.
+- Every app lives in `containers/<app>/docker-compose.yml`.
 - Folder name = compose project name = lowercase app name (`netbird`, `atvloadly`).
 - No `docker run` for anything permanent. If it should survive a reboot, it's a compose file.
-- On the host, stacks live under a single root: `~/docker/<app>/` (or `/opt/stacks/<app>/`).
+- On the host, containers live under a single root: `~/docker/<app>/` (or `/opt/containers/<app>/`).
 
 ## 2. Naming — be explicit, never rely on defaults
 
 | Thing            | Rule                                   | Example                    |
 |------------------|----------------------------------------|----------------------------|
-| Folder           | lowercase app name                     | `stacks/netbird`           |
+| Folder           | lowercase app name                     | `containers/netbird`       |
 | `container_name` | = app name                             | `NetBird`                  |
 | Named volume     | `<app>-<purpose>`                      | `netbird-client`           |
 | Network          | `<app>_net`, or shared `proxy`         | `atvloadly_net`            |
@@ -112,16 +112,16 @@ docker/
 ├── templates/
 │   ├── docker-compose.yml     # copy to start any new stack
 │   └── .env.example
-├── stacks/                    # one folder per app
+├── containers/                # one folder per app
 │   ├── netbird/
 │   └── atvloadly/
 └── scripts/
-    └── update-all.sh          # pull+up every stack
+    └── update-all.sh          # pull+up every container
 ```
 
 ## Starting a new stack (checklist)
 
-1. `cp -r templates stacks/<app>` then rename `templates` content into place.
+1. `cp -r templates containers/<app>` then rename `templates` content into place.
 2. Set `image:` to a **pinned** version, `container_name`, `hostname`.
 3. Choose storage: bind mount `./data` (default) or external named volume.
 4. Add only the `cap_add` / `devices` the app genuinely needs.

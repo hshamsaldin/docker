@@ -1,0 +1,7 @@
+[Unit]
+Description=atvloadly post-refresh status check and notify
+
+[Service]
+Type=oneshot
+User=hussein
+ExecStart=/home/hussein/atvloadly-status-check.sh

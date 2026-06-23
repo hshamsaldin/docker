@@ -1,0 +1,9 @@
+[Unit]
+Description=Run atvloadly status check 15 min after the scheduled refresh window
+
+[Timer]
+OnCalendar=*-*-* 20,21:15,45:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

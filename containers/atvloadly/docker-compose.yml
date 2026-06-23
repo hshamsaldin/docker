@@ -1,10 +1,11 @@
 # atvloadly — IPA sideloading for Apple TV.
-# NOTE: this stack deliberately deviates from the security baseline in ../../README.md.
-# Sideloading needs broad device/host access, so upstream requires seccomp:unconfined
-# and host dbus/avahi sockets. Keep these as-is; tightening them breaks pairing.
+# Standardized stack file (see https://github.com/hshamsaldin/docker for the conventions).
+# NOTE: this deliberately deviates from the generic security baseline. Sideloading needs
+# broad device/host access, so upstream requires seccomp:unconfined and host dbus/avahi
+# sockets. Keep these as-is; tightening them breaks pairing.
 services:
   atvloadly:
-    image: bitxeno/atvloadly:latest      # upstream ships only :latest; bump via `pull`
+    image: bitxeno/atvloadly:latest      # upstream ships only :latest; bump via `docker compose pull`
     container_name: atvloadly
     hostname: atvloadly
     restart: unless-stopped
