@@ -20,6 +20,7 @@ container below.
 |-----------|---------|-------|------|---------|
 | [netbird](containers/netbird) | WireGuard mesh VPN client | `netbirdio/netbird:latest` | — | `netbird-client` (volume) |
 | [atvloadly](containers/atvloadly) | Apple TV IPA sideloading | `bitxeno/atvloadly:latest` | 5533 | `/etc/atvloadly` (bind) |
+| [omada](containers/omada) | TP-Link Omada SDN controller ⚠️ UNTESTED | `mbentley/omada-controller:latest` | 8043 | `omada-data` (volume) |
 
 > Keep this table updated whenever you add or remove a container.
 

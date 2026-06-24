@@ -1,0 +1,57 @@
+# Structure follows mbentley's official bridge example
+# (https://github.com/mbentley/docker-omada-controller/blob/master/docker-compose_bridge.yml).
+# Ports MUST be LAN-reachable: APs/switches/gateway adopt + inform over them, so
+# they are published on all interfaces (not bound to localhost like the standard).
+services:
+  omada-controller:
+    image: mbentley/omada-controller:latest   # use :latest; `docker compose pull` to upgrade
+    container_name: Omada                      # = app name (brand-cased, like NetBird)
+    restart: unless-stopped
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
+    stop_grace_period: 60s
+    network_mode: bridge
+    ports:
+      - 8088:8088                # management HTTP (redirects to HTTPS)
+      - 8043:8043                # management HTTPS — the login UI
+      - 8843:8843                # guest captive portal HTTPS
+      - 19810:19810/udp          # device discovery (v6+)
+      - 27001:27001/udp          # app discovery
+      - 29810:29810/udp          # device discovery
+      - 29811-29817:29811-29817  # manager / adopt / upgrade / transfer / rtty / monitor
+    environment:
+      - PUID=508
+      - PGID=508
+      - TZ=Europe/Amsterdam
+      - MANAGE_HTTP_PORT=8088
+      - MANAGE_HTTPS_PORT=8043
+      - PORTAL_HTTP_PORT=8088
+      - PORTAL_HTTPS_PORT=8843
+      - UPGRADE_HTTPS_PORT=8043
+      - PORT_APP_DISCOVERY=27001
+      - PORT_DISCOVERY=29810
+      - PORT_MANAGER_V1=29811
+      - PORT_ADOPT_V1=29812
+      - PORT_UPGRADE_V1=29813
+      - PORT_MANAGER_V2=29814
+      - PORT_TRANSFER_V2=29815
+      - PORT_RTTY=29816
+      - PORT_DEVICE_MONITOR=29817
+      - WEB_CONFIG_OVERRIDE=false
+      - SHOW_SERVER_LOGS=true
+      - SHOW_MONGODB_LOGS=false
+      - SSL_CERT_NAME=tls.crt
+      - SSL_KEY_NAME=tls.key
+    volumes:
+      - omada-data:/opt/tplink/EAPController/data   # DB, config, Omada ID, adopted devices
+      - omada-logs:/opt/tplink/EAPController/logs
+
+volumes:
+  omada-data:
+    external: true
+    name: hussein_omada-data    # reuse the EXISTING volume — a blank one = fresh controller
+  omada-logs:
+    external: true
+    name: hussein_omada-logs
