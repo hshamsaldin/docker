@@ -1,8 +1,8 @@
 # atvloadly
 
 IPA sideloading for Apple TV without Xcode, plus tooling to back up/restore the
-pairing & Apple ID session, force refreshes on demand, and get a push
-notification when a scheduled refresh fails.
+pairing & Apple ID session and a host-side systemd service that refreshes the
+apps on a schedule and pushes a notification with the result (success or failure).
 Upstream: [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly).
 
 |              |                                          |
@@ -101,15 +101,16 @@ tar -xzf backup.tar.gz -C /restore/dest \
 
 ## Tooling
 
-Helper scripts in [`scripts/`](scripts) for refresh/install + failure notifications.
+Helper scripts in [`scripts/`](scripts) for install + a self-contained host
+refresh-and-notify service.
 
 | File | Runs on | Purpose |
 |---|---|---|
 | `Install-AppleTVApp_v2.ps1` | Windows | scp a new IPA to the host and install it via the MCP API |
 | `Refresh-AppleTVApp.ps1` | Windows | Force a refresh via MCP and notify with the real result |
-| `atvloadly-status-check.sh` | host | Check refresh status via REST API, notify **only on failure**, and log |
-| `atvloadly-status-check.service` | host (systemd) | oneshot unit that runs the status-check script |
-| `atvloadly-status-check.timer` | host (systemd) | Runs the service 5 min after atvloadly's own refresh window |
+| `atvloadly-refresh.sh` | host | Force-refresh enabled apps via MCP, wait for completion, push the `ok/failed` result |
+| `atvloadly-refresh.service` | host (systemd) | oneshot unit that runs the refresh script |
+| `atvloadly-refresh.timer` | host (systemd) | Triggers the refresh daily at 20:30 |
 
 **Refresh from Windows:**
 ```powershell
@@ -117,12 +118,13 @@ Helper scripts in [`scripts/`](scripts) for refresh/install + failure notificati
 & .\Refresh-AppleTVApp.ps1 -PiHost <host>            # all expired/near-expiry
 ```
 
-**Always-notify timer on the host:**
+**Scheduled refresh-and-notify on the host:**
 ```bash
-cp scripts/atvloadly-status-check.sh ~/atvloadly-status-check.sh && chmod +x ~/atvloadly-status-check.sh
-sudo cp scripts/atvloadly-status-check.service scripts/atvloadly-status-check.timer /etc/systemd/system/
+cp scripts/atvloadly-refresh.sh ~/atvloadly-refresh.sh && chmod +x ~/atvloadly-refresh.sh
+sudo cp scripts/atvloadly-refresh.service scripts/atvloadly-refresh.timer /etc/systemd/system/
+# edit /etc/systemd/system/atvloadly-refresh.service first: set User= and the ExecStart path
 sudo systemctl daemon-reload
-sudo systemctl enable --now atvloadly-status-check.timer
+sudo systemctl enable --now atvloadly-refresh.timer
 ```
 
 ## Notes
@@ -130,12 +132,14 @@ sudo systemctl enable --now atvloadly-status-check.timer
 - **Security deviation (intentional):** runs `seccomp:unconfined` and mounts host
   `dbus`/`avahi` sockets — required for USB/usbmuxd pairing. Do **not** add
   `no-new-privileges` / `cap_drop: ALL` here; it breaks pairing.
-- **Edit the systemd unit before enabling:** `atvloadly-status-check.service` ships
+- **Edit the systemd unit before enabling:** `atvloadly-refresh.service` ships
   with `User=YOUR_USER` / `/home/YOUR_USER/...` placeholders — set your real user
   and path first.
-- **Timer schedule is not auto-linked** to atvloadly's in-app refresh schedule. If
-  you change it in Settings → Task, update `atvloadly-status-check.timer` and run
-  `sudo systemctl daemon-reload`.
+- **Turn off atvloadly's built-in Auto-Refresh** (Settings → Task → Enable off) so
+  only this host timer drives refreshes. Change the time by editing the
+  `OnCalendar=` line in `atvloadly-refresh.timer` and running `sudo systemctl daemon-reload`.
+- **Container runs on `Europe/Amsterdam`** (`TZ` + `/etc/localtime` mount in the
+  compose) so both the timer and any in-app schedule use local wall-clock time, not UTC.
 - Upstream publishes only `:latest` — upgrade with `docker compose pull && docker compose up -d`.
 
 ---
