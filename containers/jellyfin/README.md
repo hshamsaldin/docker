@@ -57,6 +57,13 @@ Copy `docker-compose.yml` and `.env.example` from this folder
 mkdir -p ~/docker/jellyfin && cd ~/docker/jellyfin
 # place this folder's docker-compose.yml and .env.example here first
 cp .env.example .env                   # then edit PUID/PGID/TZ/MEDIA_PATH
+
+# config/cache must be writable by PUID:PGID. If Docker auto-creates them they
+# come up root-owned and Jellyfin crash-loops on "Access to the path
+# '/config/log' is denied" — so create them owned by your user first:
+mkdir -p config cache
+sudo chown -R "$(id -u):$(id -g)" config cache
+
 docker compose up -d
 ```
 
