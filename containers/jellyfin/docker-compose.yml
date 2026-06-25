@@ -28,7 +28,7 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    mem_limit: 4g          # above 512m baseline for transcode headroom; not yet tuned to real usage
+    mem_limit: 2g          # host is a Pi 4B with 3.7Gi RAM; 2g ceiling leaves room for OS + other containers
     pids_limit: 400
     # Hardware transcoding is NOT configured: this host is an ARM Raspberry Pi
     # (no Intel/AMD VAAPI). Pi GPU transcoding is a separate, unverified setup.

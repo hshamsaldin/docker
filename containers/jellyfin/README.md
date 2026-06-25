@@ -94,9 +94,10 @@ tar czf jellyfin-$(date +%F).tar.gz -C ~/docker/jellyfin/config .
   writable data lives in `./config` + `./cache` (both binds next to compose),
   which is where the image expects it — so the standard's intent (app data
   next to compose, never inside the container) still holds.
-- **Deviation — `mem_limit` raised above the 512m baseline.** Transcoding needs
-  more headroom than 512m; the exact cap is a precaution, **not yet measured on
-  this host** — tune it once real usage is observed (`docker stats Jellyfin`).
+- **Deviation — `mem_limit: 2g`** (above the 512m baseline). This host is a
+  Raspberry Pi 4B with **3.7 GiB RAM**, so 2g is a ceiling that gives transcoding
+  headroom while leaving room for the OS and the other containers. Tune with
+  `docker stats Jellyfin` once real usage is observed.
 - **Deviation — no `read_only` rootfs.** A read-only root is **not verified safe**
   for this image, so it's left off per the no-guessing rule.
 - **`/data` is read-only** — Jellyfin never writes to your media. If you later
