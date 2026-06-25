@@ -23,8 +23,12 @@ Free Software media server — streams your movies/shows to any device.
 
 ## Deploy
 
+Copy `docker-compose.yml` and `.env.example` from this folder
+(`containers/jellyfin/`) onto the host, then bring it up:
+
 ```bash
-cd ~/docker/jellyfin
+mkdir -p ~/docker/jellyfin && cd ~/docker/jellyfin
+# place this folder's docker-compose.yml and .env.example here first
 cp .env.example .env                   # then edit PUID/PGID/TZ/MEDIA_PATH
 docker compose up -d
 ```
