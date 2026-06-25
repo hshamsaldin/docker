@@ -1,0 +1,39 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: Jellyfin
+    hostname: jellyfin
+    user: "${PUID}:${PGID}"
+    networks:
+      - jellyfin_net
+    ports:
+      # Web UI. Bind to localhost if you put Jellyfin behind a reverse proxy:
+      #   - "127.0.0.1:8096:8096"
+      - "8096:8096"
+    environment:
+      - TZ=${TZ}
+    volumes:
+      # App data — bind mounts next to this compose file (repo storage rule A)
+      - ./config:/config
+      - ./cache:/cache
+      # Media library — your hard disk, mounted on the HOST at ${MEDIA_PATH}.
+      # Read-only: Jellyfin never needs to write to your media.
+      - type: bind
+        source: ${MEDIA_PATH}
+        target: /data
+        read_only: true
+    # --- Security baseline ---
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 4g          # raised from 512m: transcoding is memory-hungry
+    pids_limit: 400
+    # --- Hardware transcoding (Intel/AMD VAAPI) — uncomment if used ---
+    # devices:
+    #   - /dev/dri:/dev/dri
+
+networks:
+  jellyfin_net:
+    name: jellyfin_net
