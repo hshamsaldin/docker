@@ -14,12 +14,32 @@ Free Software media server — streams your movies/shows to any device.
 ## Prerequisites
 
 - Docker engine + compose plugin — see [host setup](../../docs/host-setup.md).
-- Media hard disk auto-mounted on the host. Add to `/etc/fstab` using the disk UUID:
-  ```
-  UUID=xxxx-xxxx  /mnt/media  ext4  defaults,nofail  0  2
-  ```
-  Then `sudo mount -a` and confirm with `lsblk` / `ls /mnt/media`.
-  `nofail` keeps boot from hanging if the disk is absent.
+- Media disk mounted on the host at `MEDIA_PATH`. Values are **per-host** — discover
+  this machine's, never copy another's:
+
+  1. **Read the partition's UUID and filesystem type** (don't assume `ext4`):
+     ```bash
+     lsblk -f          # note the data partition's UUID and FSTYPE
+     ```
+  2. **Install the driver** if it's a foreign filesystem (native ext4/xfs/btrfs need none):
+     ```bash
+     sudo apt install -y ntfs-3g       # NTFS  (Windows-formatted disks)
+     sudo apt install -y exfatprogs    # exFAT
+     ```
+  3. **Add one line to `/etc/fstab`**, substituting your own `UUID`, `FSTYPE`, and —
+     for NTFS/exFAT — your `id -u`/`id -g`. `nofail` keeps boot from hanging if the
+     disk is absent:
+     ```
+     # native Linux fs (ext4/xfs/btrfs):
+     UUID=<uuid>  /mnt/media  <fstype>  defaults,nofail  0  2
+     # foreign fs (ntfs-3g / exfat) — read-only is all Jellyfin needs:
+     UUID=<uuid>  /mnt/media  ntfs-3g   ro,nofail,uid=<uid>,gid=<gid>,umask=022  0  0
+     ```
+  4. **Mount and confirm:**
+     ```bash
+     sudo mkdir -p /mnt/media
+     sudo mount -a && ls /mnt/media
+     ```
 
 ## Deploy
 
