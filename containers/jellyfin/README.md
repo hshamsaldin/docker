@@ -98,6 +98,11 @@ tar czf jellyfin-$(date +%F).tar.gz -C ~/docker/jellyfin/config .
   Raspberry Pi 4B with **3.7 GiB RAM**, so 2g is a ceiling that gives transcoding
   headroom while leaving room for the OS and the other containers. Tune with
   `docker stats Jellyfin` once real usage is observed.
+  **Caveat (verified on this host):** Raspberry Pi OS ships with the memory
+  cgroup disabled, so Docker prints `memory limit capabilities … Limitation
+  discarded` and ignores `mem_limit` (and `docker stats` shows `0B / 0B`). To
+  actually enforce it, append `cgroup_enable=memory cgroup_memory=1` to the
+  single line in `/boot/firmware/cmdline.txt` and reboot.
 - **Deviation — no `read_only` rootfs.** A read-only root is **not verified safe**
   for this image, so it's left off per the no-guessing rule.
 - **`/data` is read-only** — Jellyfin never writes to your media. If you later
@@ -113,5 +118,8 @@ tar czf jellyfin-$(date +%F).tar.gz -C ~/docker/jellyfin/config .
   so it's left off until actually tested. Software transcoding works as-is.
 
 ---
-_⚠️ UNTESTED — not yet run on a real host. Verify each command, then replace
-this line with `Tested on: <host>, <YYYY-MM-DD>`._
+_Tested on: `raspberrypi` (Pi 4 Model B, 3.7 GiB), 2026-06-26 — `docker compose
+up -d` brings Jellyfin up healthy under the tightened baseline (`cap_drop: ALL`
++ `no-new-privileges`) and it reads the read-only NTFS media at `/data`.
+Remaining: first-run wizard + library scan (Web UI), and `mem_limit` is discarded
+until the memory cgroup is enabled (see Notes)._
