@@ -26,25 +26,26 @@ Free Software media server — streams your movies/shows to any device.
      sudo apt install -y ntfs-3g       # NTFS  (Windows-formatted disks)
      sudo apt install -y exfatprogs    # exFAT
      ```
-  3. **Create the mount point** (must exist before fstab/mount):
+  3. **Create the mount point** (must exist before fstab/mount). We mount at `/data`
+     so the host path matches the container path — same `/data` everywhere:
      ```bash
-     sudo mkdir -p /mnt/media
+     sudo mkdir -p /data
      ```
   4. **Add one line to `/etc/fstab`**, substituting your own `UUID`, `FSTYPE`, and —
      for NTFS/exFAT — your `id -u`/`id -g`. `nofail` keeps boot from hanging if the
      disk is absent:
      ```
      # native Linux fs (ext4/xfs/btrfs):
-     UUID=<uuid>  /mnt/media  <fstype>  defaults,nofail  0  2
+     UUID=<uuid>  /data  <fstype>  defaults,nofail  0  2
      # foreign fs (ntfs-3g / exfat) — read-only is all Jellyfin needs:
-     UUID=<uuid>  /mnt/media  ntfs-3g   ro,nofail,uid=<uid>,gid=<gid>,umask=022  0  0
+     UUID=<uuid>  /data  ntfs-3g   ro,nofail,uid=<uid>,gid=<gid>,umask=022  0  0
      ```
   5. **Reload systemd, mount, and confirm** (the `daemon-reload` is needed after
      editing fstab, or systemd warns it's using the old version):
      ```bash
      sudo systemctl daemon-reload
      sudo mount -a
-     ls /mnt/media          # your media should list
+     ls /data          # your media should list — same path the container sees
      ```
 
 ## Deploy
