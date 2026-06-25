@@ -28,11 +28,10 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    mem_limit: 4g          # raised from 512m: transcoding is memory-hungry
+    mem_limit: 4g          # above 512m baseline for transcode headroom; not yet tuned to real usage
     pids_limit: 400
-    # --- Hardware transcoding (Intel/AMD VAAPI) — uncomment if used ---
-    # devices:
-    #   - /dev/dri:/dev/dri
+    # Hardware transcoding is NOT configured: this host is an ARM Raspberry Pi
+    # (no Intel/AMD VAAPI). Pi GPU transcoding is a separate, unverified setup.
 
 networks:
   jellyfin_net:

@@ -87,11 +87,11 @@ tar czf jellyfin-$(date +%F).tar.gz -C ~/docker/jellyfin/config .
   writable data lives in `./config` + `./cache` (both binds next to compose),
   which is where the image expects it — so the standard's intent (app data
   next to compose, never inside the container) still holds.
-- **Deviation — `mem_limit: 4g`** (baseline is 512m). Transcoding is
-  memory-hungry; 512m will OOM on any real transcode.
-- **Deviation — no `read_only` rootfs.** Jellyfin writes transcode temp and
-  runtime state beyond `/config` and `/cache`; a read-only root is not
-  verified safe here, so it's left off per the no-guessing rule.
+- **Deviation — `mem_limit` raised above the 512m baseline.** Transcoding needs
+  more headroom than 512m; the exact cap is a precaution, **not yet measured on
+  this host** — tune it once real usage is observed (`docker stats Jellyfin`).
+- **Deviation — no `read_only` rootfs.** A read-only root is **not verified safe**
+  for this image, so it's left off per the no-guessing rule.
 - **`/data` is read-only** — Jellyfin never writes to your media. If you later
   use Jellyfin features that write back (e.g. saving `.nfo` metadata next to
   files), drop `read_only: true` on that mount.
@@ -100,8 +100,9 @@ tar czf jellyfin-$(date +%F).tar.gz -C ~/docker/jellyfin/config .
 - **DLNA / client auto-discovery** needs host networking, which this bridge
   setup does not provide. Access by IP/URL works fine; only LAN
   auto-discovery is affected.
-- **Hardware transcoding:** uncomment the `/dev/dri` device for Intel/AMD
-  VAAPI, then enable it in Dashboard → Playback.
+- **Hardware transcoding is not configured.** On an ARM Raspberry Pi there is no
+  Intel/AMD VAAPI; Pi GPU transcoding in Jellyfin is a separate, unverified setup,
+  so it's left off until actually tested. Software transcoding works as-is.
 
 ---
 _⚠️ UNTESTED — not yet run on a real host. Verify each command, then replace
