@@ -6,6 +6,8 @@ services:
     container_name: atvloadly
     hostname: atvloadly
     restart: unless-stopped
+    environment:
+      - TZ=Europe/Amsterdam               # scheduler/cron runs on local time, not UTC
     security_opt:
       - seccomp:unconfined               # required for usbmuxd / device access
     ports:
@@ -15,3 +17,4 @@ services:
                                           # app.db, settings) — this is the backup target
       - /var/run/dbus:/var/run/dbus       # host dbus — device discovery
       - /var/run/avahi-daemon:/var/run/avahi-daemon   # host avahi — Bonjour/mDNS discovery
+      - /etc/localtime:/etc/localtime:ro  # match host local time (Europe/Amsterdam)
