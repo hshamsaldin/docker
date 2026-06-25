@@ -25,9 +25,12 @@ Upstream: [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly).
 
 ## Deploy
 
+Copy `docker-compose.yml` from this folder (`containers/atvloadly/`) onto the host,
+then bring it up:
+
 ```bash
 mkdir -p ~/docker/atvloadly && cd ~/docker/atvloadly
-wget https://raw.githubusercontent.com/hshamsaldin/atvloadly/main/docker-compose.yml
+# place containers/atvloadly/docker-compose.yml in this directory first
 docker compose up -d
 ```
 
