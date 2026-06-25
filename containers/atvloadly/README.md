@@ -1,8 +1,8 @@
 # atvloadly
 
 IPA sideloading for Apple TV without Xcode, plus tooling to back up/restore the
-pairing & Apple ID session and get a push notification for every refresh attempt
-(not just failures, which is all the built-in scheduler reports).
+pairing & Apple ID session, force refreshes on demand, and get a push
+notification when a scheduled refresh fails.
 Upstream: [bitxeno/atvloadly](https://github.com/bitxeno/atvloadly).
 
 |              |                                          |
@@ -101,15 +101,15 @@ tar -xzf backup.tar.gz -C /restore/dest \
 
 ## Tooling
 
-Helper scripts in [`scripts/`](scripts) for refresh/install + always-on notifications.
+Helper scripts in [`scripts/`](scripts) for refresh/install + failure notifications.
 
 | File | Runs on | Purpose |
 |---|---|---|
 | `Install-AppleTVApp_v2.ps1` | Windows | scp a new IPA to the host and install it via the MCP API |
 | `Refresh-AppleTVApp.ps1` | Windows | Force a refresh via MCP and notify with the real result |
-| `atvloadly-status-check.sh` | host | Check refresh status via REST API, notify, and log |
+| `atvloadly-status-check.sh` | host | Check refresh status via REST API, notify **only on failure**, and log |
 | `atvloadly-status-check.service` | host (systemd) | oneshot unit that runs the status-check script |
-| `atvloadly-status-check.timer` | host (systemd) | Runs the service 15 min after atvloadly's own refresh window |
+| `atvloadly-status-check.timer` | host (systemd) | Runs the service 5 min after atvloadly's own refresh window |
 
 **Refresh from Windows:**
 ```powershell
