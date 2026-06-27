@@ -110,13 +110,13 @@ and can trigger a Jellyfin library scan. Needs `python3` + `curl`.
 script (it reads a **local path**, so the zip must already be there).
 
 Copy the zip from Windows (PowerShell), substituting your own user/IP — land it at
-`/tmp/subs.zip` to match the script's default prompt:
+`/tmp/subtitles.zip` to match the script's default prompt:
 ```powershell
-scp "C:\Users\<user>\Downloads\subtitles.zip" <user>@<pi-ip>:/tmp/subs.zip
-# e.g.  scp "C:\Users\user\Downloads\got-s06.zip" pi@192.168.1.50:/tmp/subs.zip
+scp "C:\Users\<user>\Downloads\subtitles.zip" <user>@<pi-ip>:/tmp/subtitles.zip
+# e.g.  scp "C:\Users\user\Downloads\got-s06.zip" pi@192.168.1.50:/tmp/subtitles.zip
 ```
 If you scp it somewhere else (or under a different name), just type that path at the
-script's `Subtitles .zip or folder` prompt instead of accepting `/tmp/subs.zip`.
+script's `Subtitles .zip or folder` prompt instead of accepting `/tmp/subtitles.zip`.
 
 Install once:
 ```bash
@@ -138,7 +138,7 @@ Seasons in Game of Thrones:
   2- Season 05
   3- Season 06
 Season (number or name) [0=all]: 3
-Subtitles .zip or folder [/tmp/subs.zip]: /tmp/subs.zip
+Subtitles .zip or folder [/tmp/subtitles.zip]: /tmp/subtitles.zip
 Language tag [ara]:
 ----- preview -----
 S06E01  Game.of.Thrones.S06E01...srt  ->  Game.Of.Thrones.S06E01.BluRay.4K.UHD.H265.ara.srt

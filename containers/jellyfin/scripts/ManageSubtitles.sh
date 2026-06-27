@@ -100,8 +100,8 @@ fi
 [ -d "$SCAN" ] || { echo "Season folder not found: $SCAN"; exit 1; }
 
 # 3) subtitles + language
-read -rp "Subtitles .zip or folder [/tmp/subs.zip]: " SRC
-SRC="${SRC:-/tmp/subs.zip}"
+read -rp "Subtitles .zip or folder [/tmp/subtitles.zip]: " SRC
+SRC="${SRC:-/tmp/subtitles.zip}"
 [ -e "$SRC" ] || { echo "Subtitles not found: $SRC"; exit 1; }
 read -rp "Language tag [ara]: " LANG
 LANG="${LANG:-ara}"
