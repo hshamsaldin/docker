@@ -92,6 +92,36 @@ docker compose logs -f jellyfin        # watch for startup errors
 tar czf jellyfin-$(date +%F).tar.gz -C ~/docker/jellyfin/config .
 ```
 
+## Subtitle tooling
+
+`scripts/import-subs.py` attaches external subtitle files to episodes so Jellyfin
+auto-detects them. It matches each subtitle to its video by `SxxExx` code and
+copies it **beside the video** as `<video-basename>.<lang>.srt` (or `.ass`, …).
+Runs on the **host** (writes to the media disk; Jellyfin reads it via its
+read-only mount). Dry-run unless `--apply`.
+
+| File | Runs on | Purpose |
+|---|---|---|
+| `scripts/import-subs.py` | host | match subs to episodes, place beside videos, optional archive/flatten/scan |
+
+```bash
+SHOW="/data/jellyfin/Shows/Game of Thrones"
+
+# preview (dry-run) — source can be a .zip or a folder of subs
+python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip
+
+# apply for real, keep an archive copy in Subtitles/, flatten any "Season NN/Season NN"
+python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip --apply --archive --flatten
+
+# ...and trigger a Jellyfin library scan (needs an API key)
+python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip --apply \
+    --jellyfin-url http://localhost:8096 --jellyfin-key YOUR_API_KEY
+```
+
+Matches `.srt .ass .ssa .vtt .sub`, normalizes naming (`E1`→`E01`, dots/underscores),
+defaults to `--lang ara` (3-letter ISO 639-2). Always dry-run first and eyeball the
+`->` mapping before adding `--apply`.
+
 ## Notes
 
 - **Deviation — `/data` is the media disk, not `./data`.** The repo standard
