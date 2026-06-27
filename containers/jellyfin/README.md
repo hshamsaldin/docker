@@ -164,6 +164,14 @@ name it, copy it, and paste it at the prompt (leave blank to skip the scan). The
 scan POSTs `/Library/Refresh` with `Authorization: MediaBrowser Token="<key>"`
 and is successful on `HTTP 204` — same as Dashboard → Scan All Libraries.
 
+To skip the prompt every time, save the key in a `.env` **next to the script**:
+```bash
+cp scripts/.env.example .env     # in the same folder as ManageSubtitles.sh
+# then set:  JELLYFIN_API_KEY=<your-key>   (also optional JELLYFIN_URL / JELLYFIN_SHOWS)
+```
+The script loads it on start and auto-scans after import. `.env` is gitignored —
+never commit it; only `.env.example` lives in the repo.
+
 ## Notes
 
 - **Deviation — `/data` is the media disk, not `./data`.** The repo standard

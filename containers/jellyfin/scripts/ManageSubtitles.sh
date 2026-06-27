@@ -10,8 +10,13 @@
 #
 # Needs python3 (matching) + curl (optional scan). Run on the host.
 set -uo pipefail
+# optional: load JELLYFIN_API_KEY / JELLYFIN_URL / JELLYFIN_SHOWS from a .env
+# next to this script (copy .env.example -> .env). .env is gitignored.
+SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+[ -f "$SCRIPT_DIR/.env" ] && { set -a; . "$SCRIPT_DIR/.env"; set +a; }
 SHOWS="${JELLYFIN_SHOWS:-/data/jellyfin/Shows}"
 JELLYFIN_URL="${JELLYFIN_URL:-http://localhost:8096}"
+JELLYFIN_API_KEY="${JELLYFIN_API_KEY:-}"
 dim()  { printf '\033[90m%s\033[0m\n' "$*"; }   # grey hint text
 bold() { printf '\033[1m%s\033[0m\n'  "$*"; }
 
@@ -112,9 +117,13 @@ python3 -c "$PY" "$SHOW" "$SCAN" "$SRC" "$LANG"
 read -rp "Apply (place + archive + flatten)? [y/N] " A
 if [[ "$A" =~ ^[Yy] ]]; then
   python3 -c "$PY" "$SHOW" "$SCAN" "$SRC" "$LANG" apply archive flatten quiet
-  dim "API key:  Jellyfin Dashboard -> Advanced -> API Keys -> +"
-  dim "or leave blank and scan later: Dashboard -> Libraries -> Scan All Libraries"
-  read -rsp "Jellyfin API key for auto-scan: " KEY; echo
+  if [ -n "$JELLYFIN_API_KEY" ]; then
+    KEY="$JELLYFIN_API_KEY"; dim "scanning Jellyfin (API key from .env)"
+  else
+    dim "API key:  Jellyfin Dashboard -> Advanced -> API Keys -> +   (save in .env to skip this)"
+    dim "or leave blank and scan later: Dashboard -> Libraries -> Scan All Libraries"
+    read -rsp "Jellyfin API key for auto-scan: " KEY; echo
+  fi
   if [ -n "$KEY" ]; then
     curl -s -o /dev/null -w "scan: HTTP %{http_code}\n" -X POST \
       -H "Authorization: MediaBrowser Token=\"$KEY\"" \
