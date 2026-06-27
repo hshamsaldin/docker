@@ -124,9 +124,10 @@ def main():
         shutil.rmtree(tmp, ignore_errors=True)
 
     if do_apply and a.jellyfin_url and a.jellyfin_key:
-        url = a.jellyfin_url.rstrip("/") + "/Library/Refresh?api_key=" + a.jellyfin_key
+        req = urllib.request.Request(a.jellyfin_url.rstrip("/") + "/Library/Refresh", method="POST")
+        req.add_header("Authorization", 'MediaBrowser Token="%s"' % a.jellyfin_key)
         try:
-            urllib.request.urlopen(urllib.request.Request(url, method="POST"), timeout=10)
+            urllib.request.urlopen(req, timeout=10)   # 204 No Content on success
             print("Triggered Jellyfin library scan.")
         except Exception as e:
             print("Jellyfin scan failed:", e)

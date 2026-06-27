@@ -137,6 +137,23 @@ ManageSubtitles "$SHOW" /tmp/subs.zip --apply \
 Matches `.srt .ass .ssa .vtt .sub`, normalizes naming (`E1`→`E01`, dots/underscores),
 defaults to `--lang ara` (3-letter ISO 639-2).
 
+### Trigger a library scan via API (optional)
+
+Pass `--jellyfin-url`/`--jellyfin-key` and the script kicks off a Jellyfin library
+scan after applying, so new subs appear without a manual scan.
+
+1. **Get an API key:** Jellyfin **Dashboard → Advanced → API Keys → ➕**, name it, copy it.
+2. The script POSTs to `/Library/Refresh` with that key (`Authorization: MediaBrowser
+   Token="<key>"`). A `204 No Content` means the scan was triggered. Equivalent manual call:
+   ```bash
+   curl -s -o /dev/null -w "refresh: HTTP %{http_code}\n" -X POST \
+     -H 'Authorization: MediaBrowser Token="<api-key>"' \
+     http://localhost:8096/Library/Refresh
+   # -> refresh: HTTP 204
+   ```
+
+This scans **all** libraries (same as Dashboard → Scan All Libraries).
+
 ## Notes
 
 - **Deviation — `/data` is the media disk, not `./data`.** The repo standard
