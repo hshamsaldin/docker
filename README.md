@@ -22,7 +22,7 @@ container below.
 | [atvloadly](containers/atvloadly) | Apple TV IPA sideloading | `bitxeno/atvloadly:latest` | 5533 | `/etc/atvloadly` (bind) |
 | [omada](containers/omada) | TP-Link Omada SDN controller ⚠️ UNTESTED | `mbentley/omada-controller:latest` | 8043 | `omada-data` (volume) |
 | [jellyfin](containers/jellyfin) | Media server | `jellyfin/jellyfin:latest` | 8096 | `./config`, `./cache` (bind) |
-| [qbittorrent](containers/qbittorrent) | Torrent client behind ProtonVPN ⚠️ UNTESTED | `lscr.io/linuxserver/qbittorrent:latest` + `qmcgaw/gluetun:latest` | 8080 | `./config`, `./gluetun` (bind) |
+| [qbittorrent](containers/qbittorrent) | Torrent client behind ProtonVPN | `lscr.io/linuxserver/qbittorrent:latest` + `qmcgaw/gluetun:latest` | 8080 | `./config`, `./gluetun` (bind) |
 
 > Keep this table updated whenever you add or remove a container.
 

@@ -114,8 +114,10 @@ tar czf qbittorrent-$(date +%F).tar.gz -C ~/docker/qbittorrent/config .
   with your proxy; the qBittorrent WebUI lives in gluetun's netns.
 
 ---
-_⚠️ UNTESTED on this host. The compose follows gluetun's documented ProtonVPN +
-WireGuard setup and the standard `network_mode: service:<vpn>` kill-switch
-pattern, but has not yet been run here. Replace this line with
-`Tested on: <host>, <YYYY-MM-DD>` once deploy + the Verify IP/kill-switch checks
-have actually passed._
+_Tested on: `raspberrypi` (Pi 4 Model B), 2026-06-28 — `docker compose up -d`
+brings **gluetun up healthy** and qBittorrent in its netns; the leak check
+`docker compose exec qbittorrent wget -qO- https://ipinfo.io/ip` returns a
+**Swiss ProtonVPN exit IP** (country `CH`), and qBittorrent's WebUI is reachable
+on `:8080` with the temp password from the logs. `mem_limit` is discarded until
+the memory cgroup is enabled (see Notes). Remaining quick check: the
+stop-gluetun **kill-switch** test under Verify._
