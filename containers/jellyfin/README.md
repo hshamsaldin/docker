@@ -112,8 +112,8 @@ script (it reads a **local path**, so the zip must already be there).
 Copy the zip from Windows (PowerShell), substituting your own user/IP — land it at
 `/tmp/subs.zip` to match the script's default prompt:
 ```powershell
-scp "C:\Users\<you>\Downloads\subtitles.zip" <user>@<pi-ip>:/tmp/subs.zip
-# e.g.  scp "C:\Users\me\Downloads\got-s06.zip" pi@192.168.1.50:/tmp/subs.zip
+scp "C:\Users\<user>\Downloads\subtitles.zip" <user>@<pi-ip>:/tmp/subs.zip
+# e.g.  scp "C:\Users\user\Downloads\got-s06.zip" pi@192.168.1.50:/tmp/subs.zip
 ```
 If you scp it somewhere else (or under a different name), just type that path at the
 script's `Subtitles .zip or folder` prompt instead of accepting `/tmp/subs.zip`.
