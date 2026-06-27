@@ -45,10 +45,11 @@ subs={}
 for f in find(src,SUB_EXT):
     c=codeof(os.path.basename(f))
     if c: subs.setdefault(c,[]).append(f)
+seasons={s for s,_ in subs}   # only act on seasons the subtitles actually cover
 m=mi=0
 for v in sorted(find(show,VIDEO_EXT)):
     c=codeof(os.path.basename(v))
-    if not c: continue
+    if not c or c[0] not in seasons: continue
     ss=subs.get(c)
     if not ss: print("NO SUB   S%02dE%02d  %s"%(c[0],c[1],os.path.basename(v))); mi+=1; continue
     for s in ss:

@@ -136,7 +136,9 @@ Jellyfin API key for auto-scan (blank to skip):
 Shows resolve under `$JELLYFIN_SHOWS` (default `/data/jellyfin/Shows`); the scan
 hits `$JELLYFIN_URL` (default `http://localhost:8096`). Matches
 `.srt .ass .ssa .vtt .sub`, normalizes naming (`E1`→`E01`, dots/underscores),
-language defaults to `ara` (3-letter ISO 639-2).
+language defaults to `ara` (3-letter ISO 639-2). **Only seasons present in the
+subtitle source are touched** — feed an S06 zip and it acts on S06 only, ignoring
+the other seasons.
 
 **API key for the auto-scan:** Jellyfin **Dashboard → Advanced → API Keys → ➕**,
 name it, copy it, and paste it at the prompt (leave blank to skip the scan). The
