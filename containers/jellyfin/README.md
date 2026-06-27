@@ -94,65 +94,54 @@ tar czf jellyfin-$(date +%F).tar.gz -C ~/docker/jellyfin/config .
 
 ## Subtitle tooling
 
-`scripts/ManageSubtitles` attaches external subtitle files to episodes so Jellyfin
-auto-detects them: it matches each subtitle to its episode video by `SxxExx` code
-and copies it **beside the video** as `<video-basename>.<lang>.srt` (or `.ass`, …).
-Runs on the **host** (writes to the media disk; Jellyfin reads it via its
-read-only mount).
+`scripts/ManageSubtitles.sh` attaches external subtitle files to episodes so
+Jellyfin auto-detects them. Run it on the **host** with **no arguments** — it asks
+for the show, the subtitles, and the language, previews the mapping, and on `y`
+copies each sub **beside its episode** as `<video-basename>.<lang>.srt` (or
+`.ass`, …), archives a copy in `Subtitles/`, flattens any `Season NN/Season NN`,
+and can trigger a Jellyfin library scan. Needs `python3` + `curl`.
 
 | File | Runs on | Purpose |
 |---|---|---|
-| `scripts/ManageSubtitles` | host | match subs to episodes, place beside videos; interactive by default, flags for control |
+| `scripts/ManageSubtitles.sh` | host | interactive: match subs to episodes, place beside videos, archive, flatten, optional scan |
 
-**Workflow:** download the subtitle zip on your PC → `scp` it to the host → run on
-the host (it reads a **local path**, so the zip must already be there):
+**Workflow:** download the subtitle zip on your PC → `scp` it to the host → run the
+script (it reads a **local path**, so the zip must already be there):
 ```powershell
 # on Windows (PowerShell): copy the zip to the host
 scp "C:\path\subs.zip" user@<host>:/tmp/subs.zip
 ```
 
-Install once (onto `PATH`):
+Install once:
 ```bash
-sudo cp scripts/ManageSubtitles /usr/local/bin/ && sudo chmod +x /usr/local/bin/ManageSubtitles
+sudo cp scripts/ManageSubtitles.sh /usr/local/bin/ && sudo chmod +x /usr/local/bin/ManageSubtitles.sh
 ```
 
-### Simple (interactive) — no flags
-Give it a show and a zip; it previews the mapping, asks to confirm, then
-**places + archives + flattens**:
+Then just run it — no options:
 ```bash
-ManageSubtitles "Game of Thrones" /tmp/subs.zip
+ManageSubtitles.sh
 ```
-`<show>` may be a full path or a name resolved under `$JELLYFIN_SHOWS`
-(default `/data/jellyfin/Shows`); `<subs>` may be a `.zip` or a folder.
-
-### Explicit (scriptable)
-```bash
-SHOW="/data/jellyfin/Shows/Game of Thrones"
-ManageSubtitles "$SHOW" /tmp/subs.zip --dry-run                       # preview only
-ManageSubtitles "$SHOW" /tmp/subs.zip --apply --archive --flatten     # no prompt
-ManageSubtitles "$SHOW" /tmp/subs.zip --apply \
-    --jellyfin-url http://localhost:8096 --jellyfin-key YOUR_API_KEY   # + library scan
+and answer the prompts:
+```
+Show name (or full path): Game of Thrones
+Subtitles .zip or folder [/tmp/subs.zip]: /tmp/subs.zip
+Language tag [ara]:
+----- preview -----
+S06E01  Game.of.Thrones.S06E01...srt  ->  Game.Of.Thrones.S06E01.BluRay.4K.UHD.H265.ara.srt
+...
+Apply (place + archive + flatten)? [y/N] y
+Jellyfin API key for auto-scan (blank to skip):
 ```
 
-Matches `.srt .ass .ssa .vtt .sub`, normalizes naming (`E1`→`E01`, dots/underscores),
-defaults to `--lang ara` (3-letter ISO 639-2).
+Shows resolve under `$JELLYFIN_SHOWS` (default `/data/jellyfin/Shows`); the scan
+hits `$JELLYFIN_URL` (default `http://localhost:8096`). Matches
+`.srt .ass .ssa .vtt .sub`, normalizes naming (`E1`→`E01`, dots/underscores),
+language defaults to `ara` (3-letter ISO 639-2).
 
-### Trigger a library scan via API (optional)
-
-Pass `--jellyfin-url`/`--jellyfin-key` and the script kicks off a Jellyfin library
-scan after applying, so new subs appear without a manual scan.
-
-1. **Get an API key:** Jellyfin **Dashboard → Advanced → API Keys → ➕**, name it, copy it.
-2. The script POSTs to `/Library/Refresh` with that key (`Authorization: MediaBrowser
-   Token="<key>"`). A `204 No Content` means the scan was triggered. Equivalent manual call:
-   ```bash
-   curl -s -o /dev/null -w "refresh: HTTP %{http_code}\n" -X POST \
-     -H 'Authorization: MediaBrowser Token="<api-key>"' \
-     http://localhost:8096/Library/Refresh
-   # -> refresh: HTTP 204
-   ```
-
-This scans **all** libraries (same as Dashboard → Scan All Libraries).
+**API key for the auto-scan:** Jellyfin **Dashboard → Advanced → API Keys → ➕**,
+name it, copy it, and paste it at the prompt (leave blank to skip the scan). The
+scan POSTs `/Library/Refresh` with `Authorization: MediaBrowser Token="<key>"`
+and is successful on `HTTP 204` — same as Dashboard → Scan All Libraries.
 
 ## Notes
 
