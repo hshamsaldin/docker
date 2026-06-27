@@ -62,6 +62,7 @@ for v in sorted(find(show,VIDEO_EXT)):
                 shutil.copy2(s,os.path.join(ad,os.path.basename(dst)))
         m+=1
 print("\n%s  matched=%d  missing=%d"%("APPLIED" if apply else "DRY-RUN",m,mi))
+if seasons: print("Applies to: " + ", ".join("Season %02d"%s for s in sorted(seasons)))
 if tmp: shutil.rmtree(tmp,ignore_errors=True)
 PYEOF
 )
@@ -73,6 +74,8 @@ fi
 read -rp "Show name (or full path): " SHOW
 [ -d "$SHOW" ] || SHOW="$SHOWS/$SHOW"
 [ -d "$SHOW" ] || { echo "Show folder not found: $SHOW"; exit 1; }
+echo "Seasons in $(basename "$SHOW"):"
+find "$SHOW" -maxdepth 1 -type d -iname 'Season *' -printf '  - %f\n' 2>/dev/null | sort
 read -rp "Subtitles .zip or folder [/tmp/subs.zip]: " SRC
 SRC="${SRC:-/tmp/subs.zip}"
 [ -e "$SRC" ] || { echo "Subtitles not found: $SRC"; exit 1; }
