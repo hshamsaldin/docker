@@ -68,11 +68,15 @@ PYEOF
 )
 
 echo "== Jellyfin subtitle importer =="
-if [ -d "$SHOWS" ]; then
-  echo "Shows under $SHOWS:"; ls -1 "$SHOWS" 2>/dev/null | sed 's/^/  - /'
+mapfile -t SHOWLIST < <(find "$SHOWS" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' 2>/dev/null | sort)
+echo "Shows under $SHOWS:"
+for i in "${!SHOWLIST[@]}"; do echo "$((i+1))- ${SHOWLIST[$i]}"; done
+read -rp "Show (number or name): " SHOW_IN
+if [[ "$SHOW_IN" =~ ^[0-9]+$ ]] && [ "$SHOW_IN" -ge 1 ] && [ "$SHOW_IN" -le "${#SHOWLIST[@]}" ]; then
+  SHOW_IN="${SHOWLIST[$((SHOW_IN-1))]}"
 fi
-read -rp "Show name (or full path): " SHOW
-[ -d "$SHOW" ] || SHOW="$SHOWS/$SHOW"
+SHOW="$SHOW_IN"
+[ -d "$SHOW" ] || SHOW="$SHOWS/$SHOW_IN"
 [ -d "$SHOW" ] || { echo "Show folder not found: $SHOW"; exit 1; }
 echo "Seasons in $(basename "$SHOW"):"
 find "$SHOW" -maxdepth 1 -type d -iname 'Season *' -printf '  - %f\n' 2>/dev/null | sort

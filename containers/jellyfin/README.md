@@ -123,12 +123,20 @@ ManageSubtitles.sh
 ```
 and answer the prompts:
 ```
-Show name (or full path): Game of Thrones
+Shows under /data/jellyfin/Shows:
+1- Game of Thrones
+Show (number or name): 1
+Seasons in Game of Thrones:
+  - Season 04
+  - Season 05
+  - Season 06
 Subtitles .zip or folder [/tmp/subs.zip]: /tmp/subs.zip
 Language tag [ara]:
 ----- preview -----
 S06E01  Game.of.Thrones.S06E01...srt  ->  Game.Of.Thrones.S06E01.BluRay.4K.UHD.H265.ara.srt
 ...
+DRY-RUN  matched=10  missing=0
+Applies to: Season 06
 Apply (place + archive + flatten)? [y/N] y
 Jellyfin API key for auto-scan (blank to skip):
 ```
