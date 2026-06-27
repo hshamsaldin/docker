@@ -94,53 +94,48 @@ tar czf jellyfin-$(date +%F).tar.gz -C ~/docker/jellyfin/config .
 
 ## Subtitle tooling
 
-`scripts/import-subs.py` attaches external subtitle files to episodes so Jellyfin
-auto-detects them. It matches each subtitle to its video by `SxxExx` code and
-copies it **beside the video** as `<video-basename>.<lang>.srt` (or `.ass`, …).
+`scripts/ManageSubtitles` attaches external subtitle files to episodes so Jellyfin
+auto-detects them: it matches each subtitle to its episode video by `SxxExx` code
+and copies it **beside the video** as `<video-basename>.<lang>.srt` (or `.ass`, …).
 Runs on the **host** (writes to the media disk; Jellyfin reads it via its
-read-only mount). Dry-run unless `--apply`.
+read-only mount).
 
 | File | Runs on | Purpose |
 |---|---|---|
-| `scripts/import-subs.py` | host | match subs to episodes, place beside videos; flags for archive/flatten/scan |
-| `scripts/import-subs` | host | no-flags wrapper: preview → confirm → apply + archive + flatten |
+| `scripts/ManageSubtitles` | host | match subs to episodes, place beside videos; interactive by default, flags for control |
 
-**Workflow:** download the subtitle zip on your PC → `scp` it to the host →
-run on the host. The script reads a **local path on the host**, so the zip must
-already be there:
+**Workflow:** download the subtitle zip on your PC → `scp` it to the host → run on
+the host (it reads a **local path**, so the zip must already be there):
 ```powershell
 # on Windows (PowerShell): copy the zip to the host
 scp "C:\path\subs.zip" user@<host>:/tmp/subs.zip
 ```
 
-### Simple usage (recommended) — the `import-subs` wrapper
-
-Install both files onto `PATH` once:
+Install once (onto `PATH`):
 ```bash
-sudo cp scripts/import-subs scripts/import-subs.py /usr/local/bin/
-sudo chmod +x /usr/local/bin/import-subs /usr/local/bin/import-subs.py
+sudo cp scripts/ManageSubtitles /usr/local/bin/ && sudo chmod +x /usr/local/bin/ManageSubtitles
 ```
-Then, on the host, just give it a show name and a zip — it previews, asks to
-confirm, and does the rest (no flags):
+
+### Simple (interactive) — no flags
+Give it a show and a zip; it previews the mapping, asks to confirm, then
+**places + archives + flattens**:
 ```bash
-import-subs "Game of Thrones" /tmp/subs.zip
+ManageSubtitles "Game of Thrones" /tmp/subs.zip
 ```
-Show names resolve under `$JELLYFIN_SHOWS` (default `/data/jellyfin/Shows`); the
-subs source defaults to `/tmp/subs.zip`.
+`<show>` may be a full path or a name resolved under `$JELLYFIN_SHOWS`
+(default `/data/jellyfin/Shows`); `<subs>` may be a `.zip` or a folder.
 
-### Full control — `import-subs.py` directly
-
+### Explicit (scriptable)
 ```bash
 SHOW="/data/jellyfin/Shows/Game of Thrones"
-python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip                       # dry-run
-python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip --apply --archive --flatten
-python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip --apply \
-    --jellyfin-url http://localhost:8096 --jellyfin-key YOUR_API_KEY       # + scan
+ManageSubtitles "$SHOW" /tmp/subs.zip --dry-run                       # preview only
+ManageSubtitles "$SHOW" /tmp/subs.zip --apply --archive --flatten     # no prompt
+ManageSubtitles "$SHOW" /tmp/subs.zip --apply \
+    --jellyfin-url http://localhost:8096 --jellyfin-key YOUR_API_KEY   # + library scan
 ```
 
-Source can be a `.zip` or a folder. Matches `.srt .ass .ssa .vtt .sub`, normalizes
-naming (`E1`→`E01`, dots/underscores), defaults to `--lang ara` (3-letter ISO 639-2).
-Always dry-run first and eyeball the `->` mapping before `--apply`.
+Matches `.srt .ass .ssa .vtt .sub`, normalizes naming (`E1`→`E01`, dots/underscores),
+defaults to `--lang ara` (3-letter ISO 639-2).
 
 ## Notes
 
