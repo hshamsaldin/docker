@@ -200,5 +200,9 @@ and is successful on `HTTP 204` — same as Dashboard → Scan All Libraries.
 _Tested on: `raspberrypi` (Pi 4 Model B, 3.7 GiB), 2026-06-26 — `docker compose
 up -d` brings Jellyfin up healthy under the tightened baseline (`cap_drop: ALL`
 + `no-new-privileges`) and it reads the read-only NTFS media at `/data`.
+`scripts/ManageSubtitles.sh` verified 2026-06-27: show/season menus, default
+`/tmp/subtitles.zip`, placed S04/S05/S06 Arabic subs beside the episodes +
+archived under `Subtitles/`, flattened the doubled season folder, and the API
+scan (`POST /Library/Refresh`) returned `HTTP 204`.
 Remaining: first-run wizard + library scan (Web UI), and `mem_limit` is discarded
 until the memory cgroup is enabled (see Notes)._
