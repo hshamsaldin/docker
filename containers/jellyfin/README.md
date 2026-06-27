@@ -107,11 +107,16 @@ and can trigger a Jellyfin library scan. Needs `python3` + `curl`.
 | `scripts/ManageSubtitles.sh` | host | interactive: match subs to episodes, place beside videos, archive, flatten, optional scan |
 
 **Workflow:** download the subtitle zip on your PC → `scp` it to the host → run the
-script (it reads a **local path**, so the zip must already be there):
+script (it reads a **local path**, so the zip must already be there).
+
+Copy the zip from Windows (PowerShell), substituting your own user/IP — land it at
+`/tmp/subs.zip` to match the script's default prompt:
 ```powershell
-# on Windows (PowerShell): copy the zip to the host
-scp "C:\path\subs.zip" user@<host>:/tmp/subs.zip
+scp "C:\Users\<you>\Downloads\subtitles.zip" <user>@<pi-ip>:/tmp/subs.zip
+# e.g.  scp "C:\Users\me\Downloads\got-s06.zip" pi@192.168.1.50:/tmp/subs.zip
 ```
+If you scp it somewhere else (or under a different name), just type that path at the
+script's `Subtitles .zip or folder` prompt instead of accepting `/tmp/subs.zip`.
 
 Install once:
 ```bash
