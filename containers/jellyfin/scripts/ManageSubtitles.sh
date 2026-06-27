@@ -1,20 +1,19 @@
 #!/bin/bash
 # ManageSubtitles.sh - interactive subtitle importer for Jellyfin.
 #
-# Just run it, no arguments:
+# Run with no arguments:
 #     ./ManageSubtitles.sh
-# It asks for the show, the subtitles (.zip or folder), and the language, shows a
-# preview, and on "y" places each sub beside its episode as <video>.<lang>.<ext>,
-# archives a copy in Subtitles/, flattens any "Season NN/Season NN", and can
-# trigger a Jellyfin library scan.
+# Pick a show (by number), pick a season (or "all"), point it at a subtitle
+# .zip/folder. It previews, and on "y" copies each sub beside its episode as
+# <video-basename>.<lang>.<ext>, archives a copy in Subtitles/, flattens any
+# "Season NN/Season NN", and can trigger a Jellyfin library scan.
 #
-# Needs python3 (matching) + curl (optional scan). Run on the host (where the
-# media and Jellyfin live).
+# Needs python3 (matching) + curl (optional scan). Run on the host.
 set -uo pipefail
 SHOWS="${JELLYFIN_SHOWS:-/data/jellyfin/Shows}"
 JELLYFIN_URL="${JELLYFIN_URL:-http://localhost:8096}"
 
-# --- matcher (python, driven by simple positional args: show src lang [apply archive flatten]) ---
+# --- matcher: argv = show_root scan_root src lang [apply archive flatten] ---
 PY=$(cat <<'PYEOF'
 import sys, os, re, shutil, tempfile, zipfile
 VIDEO_EXT=(".mkv",".mp4",".avi",".m4v"); SUB_EXT=(".srt",".ass",".ssa",".vtt",".sub")
@@ -27,10 +26,10 @@ def find(root,exts):
         for f in fs:
             if f.lower().endswith(exts): out.append(os.path.join(d,f))
     return out
-show, src, lang = sys.argv[1], sys.argv[2], sys.argv[3]
-flags=set(sys.argv[4:]); apply="apply" in flags; archive="archive" in flags; flatten="flatten" in flags
+show_root, scan_root, src, lang = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+flags=set(sys.argv[5:]); apply="apply" in flags; archive="archive" in flags; flatten="flatten" in flags
 if flatten and apply:
-    for inner in sorted([d for d,_,_ in os.walk(show)
+    for inner in sorted([d for d,_,_ in os.walk(scan_root)
                          if os.path.basename(d)==os.path.basename(os.path.dirname(d))],
                         key=len, reverse=True):
         parent=os.path.dirname(inner)
@@ -45,9 +44,9 @@ subs={}
 for f in find(src,SUB_EXT):
     c=codeof(os.path.basename(f))
     if c: subs.setdefault(c,[]).append(f)
-seasons={s for s,_ in subs}   # only act on seasons the subtitles actually cover
+seasons={s for s,_ in subs}
 m=mi=0
-for v in sorted(find(show,VIDEO_EXT)):
+for v in sorted(find(scan_root,VIDEO_EXT)):
     c=codeof(os.path.basename(v))
     if not c or c[0] not in seasons: continue
     ss=subs.get(c)
@@ -58,7 +57,7 @@ for v in sorted(find(show,VIDEO_EXT)):
         if apply:
             shutil.copy2(s,dst)
             if archive:
-                ad=os.path.join(show,"Subtitles","Season %02d"%c[0]); os.makedirs(ad,exist_ok=True)
+                ad=os.path.join(show_root,"Subtitles","Season %02d"%c[0]); os.makedirs(ad,exist_ok=True)
                 shutil.copy2(s,os.path.join(ad,os.path.basename(dst)))
         m+=1
 print("\n%s  matched=%d  missing=%d"%("APPLIED" if apply else "DRY-RUN",m,mi))
@@ -68,29 +67,47 @@ PYEOF
 )
 
 echo "== Jellyfin subtitle importer =="
+
+# 1) pick a show
 mapfile -t SHOWLIST < <(find "$SHOWS" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' 2>/dev/null | sort)
 echo "Shows under $SHOWS:"
-for i in "${!SHOWLIST[@]}"; do echo "$((i+1))- ${SHOWLIST[$i]}"; done
+for i in "${!SHOWLIST[@]}"; do echo "  $((i+1))- ${SHOWLIST[$i]}"; done
 read -rp "Show (number or name): " SHOW_IN
 if [[ "$SHOW_IN" =~ ^[0-9]+$ ]] && [ "$SHOW_IN" -ge 1 ] && [ "$SHOW_IN" -le "${#SHOWLIST[@]}" ]; then
   SHOW_IN="${SHOWLIST[$((SHOW_IN-1))]}"
 fi
-SHOW="$SHOW_IN"
-[ -d "$SHOW" ] || SHOW="$SHOWS/$SHOW_IN"
+SHOW="$SHOW_IN"; [ -d "$SHOW" ] || SHOW="$SHOWS/$SHOW_IN"
 [ -d "$SHOW" ] || { echo "Show folder not found: $SHOW"; exit 1; }
+
+# 2) pick a season (0 = all)
+mapfile -t SEASONLIST < <(find "$SHOW" -maxdepth 1 -mindepth 1 -type d -iname 'Season *' -printf '%f\n' 2>/dev/null | sort)
 echo "Seasons in $(basename "$SHOW"):"
-find "$SHOW" -maxdepth 1 -type d -iname 'Season *' -printf '  - %f\n' 2>/dev/null | sort
+echo "  0- All seasons"
+for i in "${!SEASONLIST[@]}"; do echo "  $((i+1))- ${SEASONLIST[$i]}"; done
+read -rp "Season (number or name) [0=all]: " SEA_IN
+SEA_IN="${SEA_IN:-0}"
+if [[ "$SEA_IN" =~ ^[0-9]+$ ]]; then
+  if [ "$SEA_IN" -eq 0 ]; then SCAN="$SHOW"
+  elif [ "$SEA_IN" -ge 1 ] && [ "$SEA_IN" -le "${#SEASONLIST[@]}" ]; then SCAN="$SHOW/${SEASONLIST[$((SEA_IN-1))]}"
+  else echo "Invalid season number."; exit 1; fi
+else
+  SCAN="$SHOW/$SEA_IN"; [ -d "$SCAN" ] || SCAN="$SEA_IN"
+fi
+[ -d "$SCAN" ] || { echo "Season folder not found: $SCAN"; exit 1; }
+
+# 3) subtitles + language
 read -rp "Subtitles .zip or folder [/tmp/subs.zip]: " SRC
 SRC="${SRC:-/tmp/subs.zip}"
 [ -e "$SRC" ] || { echo "Subtitles not found: $SRC"; exit 1; }
 read -rp "Language tag [ara]: " LANG
 LANG="${LANG:-ara}"
 
+# 4) preview -> confirm -> apply
 echo "----- preview -----"
-python3 -c "$PY" "$SHOW" "$SRC" "$LANG"
+python3 -c "$PY" "$SHOW" "$SCAN" "$SRC" "$LANG"
 read -rp "Apply (place + archive + flatten)? [y/N] " A
 if [[ "$A" =~ ^[Yy] ]]; then
-  python3 -c "$PY" "$SHOW" "$SRC" "$LANG" apply archive flatten
+  python3 -c "$PY" "$SHOW" "$SCAN" "$SRC" "$LANG" apply archive flatten
   read -rsp "Jellyfin API key for auto-scan (blank to skip): " KEY; echo
   if [ -n "$KEY" ]; then
     curl -s -o /dev/null -w "scan: HTTP %{http_code}\n" -X POST \

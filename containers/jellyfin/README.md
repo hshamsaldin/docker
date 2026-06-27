@@ -95,10 +95,11 @@ tar czf jellyfin-$(date +%F).tar.gz -C ~/docker/jellyfin/config .
 ## Subtitle tooling
 
 `scripts/ManageSubtitles.sh` attaches external subtitle files to episodes so
-Jellyfin auto-detects them. Run it on the **host** with **no arguments** — it asks
-for the show, the subtitles, and the language, previews the mapping, and on `y`
-copies each sub **beside its episode** as `<video-basename>.<lang>.srt` (or
-`.ass`, …), archives a copy in `Subtitles/`, flattens any `Season NN/Season NN`,
+Jellyfin auto-detects them. Run it on the **host** with **no arguments** — it lists
+your shows (pick by number), lists that show's seasons (pick the one your zip is
+for, or `0` for all), asks for the subtitles and language, previews the mapping,
+and on `y` copies each sub **beside its episode** as `<video-basename>.<lang>.srt`
+(or `.ass`, …), archives a copy in `Subtitles/`, flattens any `Season NN/Season NN`,
 and can trigger a Jellyfin library scan. Needs `python3` + `curl`.
 
 | File | Runs on | Purpose |
@@ -124,12 +125,14 @@ ManageSubtitles.sh
 and answer the prompts:
 ```
 Shows under /data/jellyfin/Shows:
-1- Game of Thrones
+  1- Game of Thrones
 Show (number or name): 1
 Seasons in Game of Thrones:
-  - Season 04
-  - Season 05
-  - Season 06
+  0- All seasons
+  1- Season 04
+  2- Season 05
+  3- Season 06
+Season (number or name) [0=all]: 3
 Subtitles .zip or folder [/tmp/subs.zip]: /tmp/subs.zip
 Language tag [ara]:
 ----- preview -----
