@@ -118,14 +118,18 @@ scp "C:\Users\<user>\Downloads\subtitles.zip" <user>@<pi-ip>:/tmp/subtitles.zip
 If you scp it somewhere else (or under a different name), just type that path at the
 script's `Subtitles .zip or folder` prompt instead of accepting `/tmp/subtitles.zip`.
 
-Install once:
+Install once — keep the script under your jellyfin deploy dir so it reads the
+**same `.env`** as the compose:
 ```bash
-sudo cp scripts/ManageSubtitles.sh /usr/local/bin/ && sudo chmod +x /usr/local/bin/ManageSubtitles.sh
+cp -r scripts ~/docker/jellyfin/                       # -> ~/docker/jellyfin/scripts/
+chmod +x ~/docker/jellyfin/scripts/ManageSubtitles.sh
+# optional: run it from anywhere (the symlink is resolved, still finds ../.env)
+sudo ln -sf ~/docker/jellyfin/scripts/ManageSubtitles.sh /usr/local/bin/ManageSubtitles.sh
 ```
 
-Then just run it — no options:
+Then run it — no options:
 ```bash
-ManageSubtitles.sh
+~/docker/jellyfin/scripts/ManageSubtitles.sh      # or just: ManageSubtitles.sh  (if symlinked)
 ```
 and answer the prompts:
 ```
@@ -164,10 +168,11 @@ name it, copy it, and paste it at the prompt (leave blank to skip the scan). The
 scan POSTs `/Library/Refresh` with `Authorization: MediaBrowser Token="<key>"`
 and is successful on `HTTP 204` — same as Dashboard → Scan All Libraries.
 
-To skip the prompt every time, save the key in a `.env` **next to the script**:
+To skip the prompt every time, put the key in your deploy `.env` — the **same
+`~/docker/jellyfin/.env`** as the compose (the script reads it from one level up):
 ```bash
-cp scripts/.env.example .env     # in the same folder as ManageSubtitles.sh
-# then set:  JELLYFIN_API_KEY=<your-key>   (also optional JELLYFIN_URL / JELLYFIN_SHOWS)
+# in ~/docker/jellyfin/.env  (copied from .env.example):
+JELLYFIN_API_KEY=<your-key>          # optional: JELLYFIN_URL, JELLYFIN_SHOWS
 ```
 The script loads it on start and auto-scans after import. `.env` is gitignored —
 never commit it; only `.env.example` lives in the repo.

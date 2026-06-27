@@ -10,10 +10,12 @@
 #
 # Needs python3 (matching) + curl (optional scan). Run on the host.
 set -uo pipefail
-# optional: load JELLYFIN_API_KEY / JELLYFIN_URL / JELLYFIN_SHOWS from a .env
-# next to this script (copy .env.example -> .env). .env is gitignored.
-SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
-[ -f "$SCRIPT_DIR/.env" ] && { set -a; . "$SCRIPT_DIR/.env"; set +a; }
+# load JELLYFIN_API_KEY / JELLYFIN_URL / JELLYFIN_SHOWS from the deploy dir's .env
+# (the same .env as docker-compose.yml, one level up from scripts/). .env is gitignored.
+SELF="$(readlink -f "$0" 2>/dev/null || echo "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$SELF")" 2>/dev/null && pwd)"
+ENV_FILE="$(dirname "$SCRIPT_DIR")/.env"
+[ -f "$ENV_FILE" ] && { set -a; . "$ENV_FILE"; set +a; }
 SHOWS="${JELLYFIN_SHOWS:-/data/jellyfin/Shows}"
 JELLYFIN_URL="${JELLYFIN_URL:-http://localhost:8096}"
 JELLYFIN_API_KEY="${JELLYFIN_API_KEY:-}"
