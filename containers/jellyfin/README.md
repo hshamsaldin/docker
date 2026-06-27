@@ -141,7 +141,10 @@ S06E01  Game.of.Thrones.S06E01...srt  ->  Game.Of.Thrones.S06E01.BluRay.4K.UHD.H
 DRY-RUN  matched=10  missing=0
 Applies to: Season 06
 Apply (place + archive + flatten)? [y/N] y
-Jellyfin API key for auto-scan (blank to skip):
+APPLIED  matched=10  missing=0
+API key:  Jellyfin Dashboard -> Advanced -> API Keys -> +   (grey hint)
+Jellyfin API key for auto-scan: <paste, or blank to skip>
+scan: HTTP 204
 ```
 
 Shows resolve under `$JELLYFIN_SHOWS` (default `/data/jellyfin/Shows`); the scan

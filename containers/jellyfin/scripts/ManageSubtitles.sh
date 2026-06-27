@@ -12,6 +12,8 @@
 set -uo pipefail
 SHOWS="${JELLYFIN_SHOWS:-/data/jellyfin/Shows}"
 JELLYFIN_URL="${JELLYFIN_URL:-http://localhost:8096}"
+dim()  { printf '\033[90m%s\033[0m\n' "$*"; }   # grey hint text
+bold() { printf '\033[1m%s\033[0m\n'  "$*"; }
 
 # --- matcher: argv = show_root scan_root src lang [apply archive flatten] ---
 PY=$(cat <<'PYEOF'
@@ -27,7 +29,7 @@ def find(root,exts):
             if f.lower().endswith(exts): out.append(os.path.join(d,f))
     return out
 show_root, scan_root, src, lang = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
-flags=set(sys.argv[5:]); apply="apply" in flags; archive="archive" in flags; flatten="flatten" in flags
+flags=set(sys.argv[5:]); apply="apply" in flags; archive="archive" in flags; flatten="flatten" in flags; quiet="quiet" in flags
 if flatten and apply:
     for inner in sorted([d for d,_,_ in os.walk(scan_root)
                          if os.path.basename(d)==os.path.basename(os.path.dirname(d))],
@@ -50,10 +52,12 @@ for v in sorted(find(scan_root,VIDEO_EXT)):
     c=codeof(os.path.basename(v))
     if not c or c[0] not in seasons: continue
     ss=subs.get(c)
-    if not ss: print("NO SUB   S%02dE%02d  %s"%(c[0],c[1],os.path.basename(v))); mi+=1; continue
+    if not ss:
+        if not quiet: print("NO SUB   S%02dE%02d  %s"%(c[0],c[1],os.path.basename(v)))
+        mi+=1; continue
     for s in ss:
         ext=os.path.splitext(s)[1].lower(); dst=os.path.splitext(v)[0]+"."+lang+ext
-        print("S%02dE%02d  %s  ->  %s"%(c[0],c[1],os.path.basename(s),os.path.basename(dst)))
+        if not quiet: print("S%02dE%02d  %s  ->  %s"%(c[0],c[1],os.path.basename(s),os.path.basename(dst)))
         if apply:
             shutil.copy2(s,dst)
             if archive:
@@ -66,11 +70,11 @@ if tmp: shutil.rmtree(tmp,ignore_errors=True)
 PYEOF
 )
 
-echo "== Jellyfin subtitle importer =="
+bold "Jellyfin subtitle importer"
 
 # 1) pick a show
 mapfile -t SHOWLIST < <(find "$SHOWS" -maxdepth 1 -mindepth 1 -type d -printf '%f\n' 2>/dev/null | sort)
-echo "Shows under $SHOWS:"
+dim "Shows under $SHOWS"
 for i in "${!SHOWLIST[@]}"; do echo "  $((i+1))- ${SHOWLIST[$i]}"; done
 read -rp "Show (number or name): " SHOW_IN
 if [[ "$SHOW_IN" =~ ^[0-9]+$ ]] && [ "$SHOW_IN" -ge 1 ] && [ "$SHOW_IN" -le "${#SHOWLIST[@]}" ]; then
@@ -107,8 +111,10 @@ echo "----- preview -----"
 python3 -c "$PY" "$SHOW" "$SCAN" "$SRC" "$LANG"
 read -rp "Apply (place + archive + flatten)? [y/N] " A
 if [[ "$A" =~ ^[Yy] ]]; then
-  python3 -c "$PY" "$SHOW" "$SCAN" "$SRC" "$LANG" apply archive flatten
-  read -rsp "Jellyfin API key for auto-scan (blank to skip): " KEY; echo
+  python3 -c "$PY" "$SHOW" "$SCAN" "$SRC" "$LANG" apply archive flatten quiet
+  dim "API key:  Jellyfin Dashboard -> Advanced -> API Keys -> +"
+  dim "or leave blank and scan later: Dashboard -> Libraries -> Scan All Libraries"
+  read -rsp "Jellyfin API key for auto-scan: " KEY; echo
   if [ -n "$KEY" ]; then
     curl -s -o /dev/null -w "scan: HTTP %{http_code}\n" -X POST \
       -H "Authorization: MediaBrowser Token=\"$KEY\"" \
