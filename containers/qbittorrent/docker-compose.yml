@@ -36,6 +36,7 @@ services:
       # ProtonVPN supports VPN-side port forwarding (needs a P2P server +
       # "Moderate NAT" on the WireGuard config). Improves torrent connectivity.
       - VPN_PORT_FORWARDING=${VPN_PORT_FORWARDING}
+      - PORT_FORWARD_ONLY=${PORT_FORWARD_ONLY}   # only P2P/port-forward servers
       # Let LAN clients reach the qBittorrent WebUI published below; without
       # this, gluetun's firewall drops the return traffic to your LAN.
       - FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET}
