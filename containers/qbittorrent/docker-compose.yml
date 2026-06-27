@@ -37,6 +37,10 @@ services:
       # "Moderate NAT" on the WireGuard config). Improves torrent connectivity.
       - VPN_PORT_FORWARDING=${VPN_PORT_FORWARDING}
       - PORT_FORWARD_ONLY=${PORT_FORWARD_ONLY}   # only P2P/port-forward servers
+      # On each port assign/renew, push the forwarded port into qBittorrent's
+      # listening port (script shares this netns -> qbit is on localhost:8080).
+      # Requires qBittorrent "Bypass authentication for localhost" = on.
+      - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh /scripts/qbt-port.sh {{PORT}}
       # Let LAN clients reach the qBittorrent WebUI published below; without
       # this, gluetun's firewall drops the return traffic to your LAN.
       - FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET}
@@ -49,6 +53,7 @@ services:
     # --- storage: gluetun servers cache / state, bind next to this file ---
     volumes:
       - ./gluetun:/gluetun
+      - ./scripts:/scripts:ro          # qbt-port.sh, run by the UP_COMMAND above
 
     # --- health: confirms the tunnel is actually up and routing ---
     healthcheck:

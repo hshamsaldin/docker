@@ -8,7 +8,7 @@ WireGuard tunnel — if the VPN drops, qBittorrent has no network (kill switch).
 | **Upstream** | [linuxserver/qbittorrent](https://github.com/linuxserver/docker-qbittorrent) · [qdm12/gluetun](https://github.com/qdm12/gluetun) (→ [passteque/gluetun](https://github.com/passteque/gluetun)) |
 | **Image**    | `lscr.io/linuxserver/qbittorrent:latest` · `qmcgaw/gluetun:latest` |
 | **Web UI**   | `http://<host>:8080` (qBittorrent, published *on gluetun*) |
-| **Storage**  | `./config`, `./gluetun` (bind) · downloads disk → `/downloads` (bind) |
+| **Storage**  | `./config`, `./gluetun`, `./scripts` (bind) · downloads disk → `/downloads` (bind) |
 | **Network**  | qBittorrent runs in **gluetun's** netns (`network_mode: service:gluetun`); only gluetun publishes ports |
 | **Host deps**| `/dev/net/tun` (kernel tun device — present by default on Linux) |
 
@@ -95,12 +95,14 @@ tar czf qbittorrent-$(date +%F).tar.gz -C ~/docker/qbittorrent/config .
   `FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET}` (set in `.env`) so gluetun doesn't
   drop the return packets. If the WebUI is unreachable from other machines,
   that subnet is the first thing to check.
-- **Port forwarding is enabled but not auto-wired into qBittorrent.**
-  `VPN_PORT_FORWARDING=on` makes Proton assign an inbound port, but mapping it
-  to qBittorrent's listen port is a separate step (gluetun writes the port to a
-  file / exposes it on its control server; a small updater script or
-  `VPN_PORT_FORWARDING_UP_COMMAND` syncs it). Left out here until tested —
-  outbound torrenting works without it; you just get fewer incoming peers.
+- **Port forwarding is auto-wired into qBittorrent.** On every port assign/
+  renew, gluetun runs `scripts/qbt-port.sh` (mounted at `/scripts`, via
+  `VPN_PORT_FORWARDING_UP_COMMAND`), which POSTs the new port to qBittorrent's
+  WebUI API on `127.0.0.1:8080` (same netns). **One-time setup required:** in
+  qBittorrent → Settings → Web UI, tick **"Bypass authentication for clients on
+  localhost"** so the script needs no login, and untick **"Use UPnP/NAT-PMP"**
+  under Connection (the VPN handles forwarding, not your router). Verify it took
+  with `docker compose logs gluetun | grep qbt-port`.
 - **Security-baseline deviations** (deliberate, like `omada`):
   - gluetun keeps `cap_drop: ALL` but **adds `NET_ADMIN`** and the `/dev/net/tun`
     device — both are mandatory for WireGuard.
@@ -119,5 +121,7 @@ brings **gluetun up healthy** and qBittorrent in its netns; the leak check
 `docker compose exec qbittorrent wget -qO- https://ipinfo.io/ip` returns a
 **Swiss ProtonVPN exit IP** (country `CH`), and qBittorrent's WebUI is reachable
 on `:8080` with the temp password from the logs. `mem_limit` is discarded until
-the memory cgroup is enabled (see Notes). Remaining quick check: the
-stop-gluetun **kill-switch** test under Verify._
+the memory cgroup is enabled (see Notes). Remaining checks (not yet run here):
+the stop-gluetun **kill-switch** test under Verify, and the **auto port-forward**
+(`scripts/qbt-port.sh` via `VPN_PORT_FORWARDING_UP_COMMAND`) — added after the
+first deploy, pending the one-time qBittorrent localhost-auth-bypass toggle._
