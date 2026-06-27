@@ -1,0 +1,89 @@
+# qBittorrent routed through gluetun (ProtonVPN, WireGuard).
+#
+# gluetun owns the network namespace; qBittorrent joins it with
+# `network_mode: "service:gluetun"`, so ALL torrent traffic exits through the
+# VPN and there is no leak path: if gluetun stops or the tunnel drops,
+# qBittorrent loses network entirely (gluetun's built-in kill switch).
+#
+# Because the two share ONE netns, qBittorrent gets no `ports:`/`networks:` of
+# its own — its WebUI is published on the GLUETUN service below instead.
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest        # use :latest; `docker compose pull` to upgrade
+    container_name: gluetun
+    hostname: gluetun
+    restart: unless-stopped
+
+    # --- security baseline (gluetun needs the tun device + NET_ADMIN) ---
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN                        # bring up the WireGuard interface
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    mem_limit: 256m
+    pids_limit: 200
+
+    # --- VPN config (secrets/values come from .env, which is gitignored) ---
+    environment:
+      - TZ=${TZ}
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      # ProtonVPN supports VPN-side port forwarding (needs a P2P server +
+      # "Moderate NAT" on the WireGuard config). Improves torrent connectivity.
+      - VPN_PORT_FORWARDING=${VPN_PORT_FORWARDING}
+      # Let LAN clients reach the qBittorrent WebUI published below; without
+      # this, gluetun's firewall drops the return traffic to your LAN.
+      - FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET}
+
+    # --- networking: qBittorrent's WebUI is published HERE (shared netns) ---
+    ports:
+      # WEBUI_BIND is "8080" (LAN) or "127.0.0.1:8080" (localhost / behind proxy)
+      - "${WEBUI_BIND}:8080"
+
+    # --- storage: gluetun servers cache / state, bind next to this file ---
+    volumes:
+      - ./gluetun:/gluetun
+
+    # --- health: confirms the tunnel is actually up and routing ---
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "https://ipinfo.io/ip"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest   # use :latest; pull to upgrade
+    container_name: qBittorrent
+
+    # No own network — ride entirely on gluetun's netns. This is the kill
+    # switch: no gluetun (or no tunnel) == no network for qBittorrent.
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    restart: unless-stopped
+
+    # --- security: linuxserver/s6 image; caps intentionally NOT dropped here
+    #     (see README Notes — unverified against this image, like omada) ---
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    pids_limit: 400
+
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=8080                  # must match the port published on gluetun
+
+    # --- storage: app config + your downloads disk, both bind mounts ---
+    volumes:
+      - ./config:/config
+      - type: bind
+        source: ${DOWNLOADS_PATH}
+        target: /downloads
