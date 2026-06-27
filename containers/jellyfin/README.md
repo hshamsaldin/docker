@@ -113,7 +113,7 @@ Copy the zip from Windows (PowerShell), substituting your own user/IP — land i
 `/tmp/subtitles.zip` to match the script's default prompt:
 ```powershell
 scp "C:\Users\<user>\Downloads\subtitles.zip" <user>@<pi-ip>:/tmp/subtitles.zip
-# e.g.  scp "C:\Users\user\Downloads\got-s06.zip" pi@192.168.1.50:/tmp/subtitles.zip
+# e.g.  scp "C:\Users\user\Downloads\show-subs.zip" pi@192.168.1.50:/tmp/subtitles.zip
 ```
 If you scp it somewhere else (or under a different name), just type that path at the
 script's `Subtitles .zip or folder` prompt instead of accepting `/tmp/subtitles.zip`.
@@ -134,9 +134,9 @@ Then run it — no options:
 and answer the prompts:
 ```
 Shows under /data/jellyfin/Shows:
-  1- Game of Thrones
+  1- My Show
 Show (number or name): 1
-Seasons in Game of Thrones:
+Seasons in My Show:
   0- All seasons
   1- Season 04
   2- Season 05
@@ -145,7 +145,7 @@ Season (number or name) [0=all]: 3
 Subtitles .zip or folder [/tmp/subtitles.zip]: /tmp/subtitles.zip
 Language tag [ara]:
 ----- preview -----
-S06E01  Game.of.Thrones.S06E01...srt  ->  Game.Of.Thrones.S06E01.BluRay.4K.UHD.H265.ara.srt
+S06E01  My.Show.S06E01...srt  ->  My.Show.S06E01.BluRay.4K.UHD.H265.ara.srt
 ...
 DRY-RUN  matched=10  missing=0
 Applies to: Season 06
