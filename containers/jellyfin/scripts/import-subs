@@ -1,0 +1,28 @@
+#!/bin/bash
+# import-subs - convenience wrapper around import-subs.py with the standard
+# options baked in: preview the mapping, confirm, then apply + archive + flatten.
+#
+# Usage:  import-subs "<Show Name>" [subs.zip|folder]
+#   - <Show Name> is resolved under $JELLYFIN_SHOWS (default /data/jellyfin/Shows)
+#   - subs source defaults to /tmp/subs.zip
+#
+# Install (both files onto PATH, side by side):
+#   sudo cp import-subs import-subs.py /usr/local/bin/
+#   sudo chmod +x /usr/local/bin/import-subs /usr/local/bin/import-subs.py
+set -euo pipefail
+SHOWS="${JELLYFIN_SHOWS:-/data/jellyfin/Shows}"      # override: JELLYFIN_SHOWS=/path import-subs ...
+DIR="$(cd "$(dirname "$0")" && pwd)"
+PY="$DIR/import-subs.py"
+NAME="${1:-}"; SRC="${2:-/tmp/subs.zip}"
+[ -z "$NAME" ] && { echo 'usage: import-subs "<Show Name>" [subs.zip|folder]'; exit 1; }
+SHOW="$SHOWS/$NAME"
+echo "Show: $SHOW"
+echo "Subs: $SRC"
+echo "----- preview -----"
+python3 "$PY" "$SHOW" "$SRC"
+read -rp "Apply these? [y/N] " a
+if [[ "$a" =~ ^[Yy]$ ]]; then
+  python3 "$PY" "$SHOW" "$SRC" --apply --archive --flatten
+else
+  echo "Aborted."
+fi

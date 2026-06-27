@@ -102,25 +102,45 @@ read-only mount). Dry-run unless `--apply`.
 
 | File | Runs on | Purpose |
 |---|---|---|
-| `scripts/import-subs.py` | host | match subs to episodes, place beside videos, optional archive/flatten/scan |
+| `scripts/import-subs.py` | host | match subs to episodes, place beside videos; flags for archive/flatten/scan |
+| `scripts/import-subs` | host | no-flags wrapper: preview → confirm → apply + archive + flatten |
+
+**Workflow:** download the subtitle zip on your PC → `scp` it to the host →
+run on the host. The script reads a **local path on the host**, so the zip must
+already be there:
+```powershell
+# on Windows (PowerShell): copy the zip to the host
+scp "C:\path\subs.zip" user@<host>:/tmp/subs.zip
+```
+
+### Simple usage (recommended) — the `import-subs` wrapper
+
+Install both files onto `PATH` once:
+```bash
+sudo cp scripts/import-subs scripts/import-subs.py /usr/local/bin/
+sudo chmod +x /usr/local/bin/import-subs /usr/local/bin/import-subs.py
+```
+Then, on the host, just give it a show name and a zip — it previews, asks to
+confirm, and does the rest (no flags):
+```bash
+import-subs "Game of Thrones" /tmp/subs.zip
+```
+Show names resolve under `$JELLYFIN_SHOWS` (default `/data/jellyfin/Shows`); the
+subs source defaults to `/tmp/subs.zip`.
+
+### Full control — `import-subs.py` directly
 
 ```bash
 SHOW="/data/jellyfin/Shows/Game of Thrones"
-
-# preview (dry-run) — source can be a .zip or a folder of subs
-python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip
-
-# apply for real, keep an archive copy in Subtitles/, flatten any "Season NN/Season NN"
+python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip                       # dry-run
 python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip --apply --archive --flatten
-
-# ...and trigger a Jellyfin library scan (needs an API key)
 python3 scripts/import-subs.py "$SHOW" /tmp/subs.zip --apply \
-    --jellyfin-url http://localhost:8096 --jellyfin-key YOUR_API_KEY
+    --jellyfin-url http://localhost:8096 --jellyfin-key YOUR_API_KEY       # + scan
 ```
 
-Matches `.srt .ass .ssa .vtt .sub`, normalizes naming (`E1`→`E01`, dots/underscores),
-defaults to `--lang ara` (3-letter ISO 639-2). Always dry-run first and eyeball the
-`->` mapping before adding `--apply`.
+Source can be a `.zip` or a folder. Matches `.srt .ass .ssa .vtt .sub`, normalizes
+naming (`E1`→`E01`, dots/underscores), defaults to `--lang ara` (3-letter ISO 639-2).
+Always dry-run first and eyeball the `->` mapping before `--apply`.
 
 ## Notes
 
