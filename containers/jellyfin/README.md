@@ -48,6 +48,47 @@ Free Software media server — streams your movies/shows to any device.
      ls /data          # your media should list — same path the container sees
      ```
 
+### USB disk dropping off under load? (UAS quirk)
+
+On a Raspberry Pi, many USB‑SATA/NVMe bridges (Realtek RTL9210, JMicron, some
+ASMedia) ship **buggy UAS** (USB Attached SCSI) firmware that crashes the USB
+controller under sustained I/O — exactly what a media server + downloads cause.
+The drive vanishes mid-use and `/data` silently falls back to the SD card; your
+libraries/downloads look "missing" until the disk is remounted. Tell-tale signs
+in `dmesg`:
+
+```
+sd 0:0:0:0: [sda] ... uas_eh_abort_handler ...
+xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
+xhci_hcd 0000:01:00.0: HC died; cleaning up
+```
+
+**Fix — force the stable `usb-storage` driver for that one bridge:**
+
+1. Find *your* bridge's USB ID (don't copy another host's — discover this one's):
+   ```bash
+   lsusb     # e.g. "Bus 002 ... ID 0bda:9210 Realtek ... RTL9210B-CG"
+   ```
+2. Append `usb-storage.quirks=<vid>:<pid>:u` to the **single line** in
+   `/boot/firmware/cmdline.txt` (`:u` = ignore UAS), keeping it one line:
+   ```bash
+   sudo cp /boot/firmware/cmdline.txt /boot/firmware/cmdline.txt.bak
+   grep -q usb-storage.quirks /boot/firmware/cmdline.txt || \
+     sudo sed -i 's/$/ usb-storage.quirks=<vid>:<pid>:u/' /boot/firmware/cmdline.txt   # e.g. 0bda:9210:u
+   sudo reboot
+   ```
+3. Confirm after reboot — the bridge should now use `usb-storage`, not `uas`:
+   ```bash
+   dmesg | grep -iE 'UAS is ignored|Quirks match|usb-storage'
+   # -> "UAS is ignored for this device, using usb-storage instead"
+   # -> "Quirks match for vid <vid> pid <pid>"
+   ```
+
+Trade-off: slightly lower sequential throughput (no command queuing), but
+rock-solid — and still well above the Pi's 1 GbE bottleneck. It affects **only**
+the listed bridge; other USB drives keep using UAS. This also fixes the same disk
+for any other container on `/data` (e.g. [qbittorrent](../qbittorrent)).
+
 ## Deploy
 
 Copy `docker-compose.yml` and `.env.example` from this folder
