@@ -21,6 +21,11 @@ services:
       - ALL
     cap_add:
       - NET_ADMIN                        # bring up the WireGuard interface
+      - DAC_OVERRIDE                     # gluetun creates /tmp/gluetun mode 0644
+                                         # (no exec bit) and writes runtime files
+                                         # there; under cap_drop ALL even root
+                                         # needs DAC_OVERRIDE to write into it,
+                                         # else port forwarding aborts.
     devices:
       - /dev/net/tun:/dev/net/tun
     mem_limit: 256m

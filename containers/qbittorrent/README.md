@@ -105,7 +105,11 @@ tar czf qbittorrent-$(date +%F).tar.gz -C ~/docker/qbittorrent/config .
   with `docker compose logs gluetun | grep qbt-port`.
 - **Security-baseline deviations** (deliberate, like `omada`):
   - gluetun keeps `cap_drop: ALL` but **adds `NET_ADMIN`** and the `/dev/net/tun`
-    device — both are mandatory for WireGuard.
+    device (mandatory for WireGuard), plus **`DAC_OVERRIDE`**: gluetun creates
+    `/tmp/gluetun` as mode `0644` (no execute bit) and writes its runtime port
+    file there, and under `cap_drop: ALL` even root needs `DAC_OVERRIDE` to write
+    into it — without it, port forwarding aborts with `/tmp/gluetun/...:
+    permission denied` and the up command never fires.
   - qBittorrent is a linuxserver/s6 image; `cap_drop: ALL` and `read_only` are
     **not** applied (unverified against this image's init, and would risk a
     crash-loop). `no-new-privileges` is kept on both.
