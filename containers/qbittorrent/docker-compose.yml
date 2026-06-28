@@ -46,10 +46,11 @@ services:
       # listening port (script shares this netns -> qbit is on localhost:8080).
       # Requires qBittorrent "Bypass authentication for localhost" = on.
       - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh /scripts/qbt-port.sh {{PORT}}
-      # gluetun's DNS-over-TLS resolver can return empty answers for some
-      # domains, which breaks qBittorrent's tracker resolution -> no peers ->
-      # slow. Use plain DNS (still routed through the VPN tunnel) for reliability.
-      - DOT=off
+      # Encrypted DNS via Cloudflare + Quad9 (gluetun does DNS-over-TLS, not DoH).
+      # gluetun load-balances and falls back across the listed providers, which
+      # also fixes the empty-answer flakiness seen with a single DoT upstream.
+      - DOT=on
+      - DOT_PROVIDERS=cloudflare,quad9
       # Let LAN clients reach the qBittorrent WebUI published below; without
       # this, gluetun's firewall drops the return traffic to your LAN.
       - FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET}
