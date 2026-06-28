@@ -8,7 +8,7 @@ WireGuard tunnel — if the VPN drops, qBittorrent has no network (kill switch).
 | **Upstream** | [linuxserver/qbittorrent](https://github.com/linuxserver/docker-qbittorrent) · [qdm12/gluetun](https://github.com/qdm12/gluetun) (→ [passteque/gluetun](https://github.com/passteque/gluetun)) |
 | **Image**    | `lscr.io/linuxserver/qbittorrent:latest` · `qmcgaw/gluetun:latest` |
 | **Web UI**   | `http://<host>:8080` (qBittorrent, published *on gluetun*) |
-| **Storage**  | `./config`, `./gluetun`, `./scripts`, `./portsync` (bind) · downloads disk → `/downloads` (bind) |
+| **Storage**  | `./config`, `./gluetun`, `./scripts` (bind) · downloads disk → `/downloads` (bind) |
 | **Network**  | qBittorrent runs in **gluetun's** netns (`network_mode: service:gluetun`); only gluetun publishes ports |
 | **Host deps**| `/dev/net/tun` (kernel tun device — present by default on Linux) |
 
@@ -61,7 +61,7 @@ docker compose pull && docker compose up -d
 ## Verify
 
 ```bash
-docker compose ps                      # all 3 services "running"; gluetun "healthy"
+docker compose ps                      # both services "running"; gluetun "healthy"
 
 # Confirm qBittorrent's traffic actually exits via the VPN — this prints the
 # ProtonVPN exit IP (NOT your home IP). If it shows your real IP, STOP.
@@ -82,11 +82,10 @@ tar czf qbittorrent-$(date +%F).tar.gz -C ~/docker/qbittorrent/config .
 
 ## Notes
 
-- **Three services, one folder.** Deviation from "one container = one compose":
-  qBittorrent's inseparable helpers share this folder/compose — **gluetun** (the
-  VPN it routes through) and **port-sync** (a tiny sidecar that keeps the
-  listening port matched to gluetun's forwarded port). Folder/app name is
-  `qbittorrent`; the other two are infrastructure for it.
+- **Two services, one folder.** Deviation from "one container = one compose":
+  gluetun is qBittorrent's inseparable VPN sidecar, so they share this folder
+  and compose file. Folder/app name is `qbittorrent`; gluetun is infrastructure
+  for it.
 - **The kill switch is the whole point.** `network_mode: "service:gluetun"`
   means qBittorrent has no network stack of its own. There is no
   `ports:`/`networks:`/`hostname:` on the qBittorrent service — those live on
@@ -96,19 +95,17 @@ tar czf qbittorrent-$(date +%F).tar.gz -C ~/docker/qbittorrent/config .
   `FIREWALL_OUTBOUND_SUBNETS=${LAN_SUBNET}` (set in `.env`) so gluetun doesn't
   drop the return packets. If the WebUI is unreachable from other machines,
   that subnet is the first thing to check.
-- **Port forwarding is auto-synced into qBittorrent (via the `port-sync`
-  sidecar).** gluetun's `VPN_PORT_FORWARDING_UP_COMMAND` only *writes* the current
-  forwarded port to `./portsync/port`; the always-running **port-sync** sidecar
-  (`scripts/qbt-port-sync.sh`) loops every 30s and POSTs it to qBittorrent's WebUI
-  API on `127.0.0.1:8080` whenever it differs. This split is deliberate — a
-  one-shot up-command fires *before* qBittorrent's WebUI is ready (and gluetun
-  times it out), which left qBittorrent stuck on a stale/closed port after every
-  restart; the reconciler fixes that and survives reboots, reconnects, and port
-  changes. **One-time setup required:** qBittorrent → Settings → Web UI, tick
-  **"Bypass authentication for clients on localhost"** (so the sidecar needs no
-  login), and untick **"Use UPnP/NAT-PMP"** under Connection (the VPN handles
-  forwarding). Watch it work with `docker compose logs -f port-sync`
-  (`port-sync: listen_port X -> Y`).
+- **Port forwarding is auto-wired into qBittorrent.** On each port assign/renew,
+  gluetun runs `scripts/qbt-port.sh` (mounted at `/scripts`, via
+  `VPN_PORT_FORWARDING_UP_COMMAND`), which POSTs the new port to qBittorrent's
+  WebUI API on `127.0.0.1:8080` (same netns), retrying for up to 5 min so it
+  rides out a slow qBittorrent startup. This only works because gluetun's
+  port-forwarding service no longer aborts (it needs `DAC_OVERRIDE` + `CHOWN`,
+  see below) — otherwise the up-command never fires. **One-time setup required:**
+  qBittorrent → Settings → Web UI, tick **"Bypass authentication for clients on
+  localhost"** so the script needs no login, and untick **"Use UPnP/NAT-PMP"**
+  under Connection. Verify with `docker compose exec gluetun cat /tmp/gluetun/forwarded_port`
+  vs qBittorrent's listening port.
 - **Security-baseline deviations** (deliberate, like `omada`):
   - gluetun keeps `cap_drop: ALL` but **adds `NET_ADMIN`** and the `/dev/net/tun`
     device (mandatory for WireGuard), plus **`DAC_OVERRIDE`** and **`CHOWN`**:

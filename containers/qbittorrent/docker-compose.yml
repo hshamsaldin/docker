@@ -45,12 +45,11 @@ services:
       # "Moderate NAT" on the WireGuard config). Improves torrent connectivity.
       - VPN_PORT_FORWARDING=${VPN_PORT_FORWARDING}
       - PORT_FORWARD_ONLY=${PORT_FORWARD_ONLY}   # only P2P/port-forward servers
-      # On each port assign/renew, gluetun just WRITES the new forwarded port to
-      # a shared file; the port-sync sidecar (below) applies it to qBittorrent.
-      # A one-shot command can't apply it reliably — it fires before qBittorrent's
-      # WebUI is up — so writing the file (instant) + a long-running reconciler is
-      # the robust split.
-      - "VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh -c 'echo {{PORT}} > /portsync/port'"
+      # On each port assign/renew, gluetun runs qbt-port.sh (in this netns, so
+      # qBittorrent is on localhost:8080) to set qBittorrent's listening port.
+      # Now that the PF service no longer aborts (CHOWN above), this command
+      # actually fires. Requires qBittorrent "Bypass auth for localhost" = on.
+      - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh /scripts/qbt-port.sh {{PORT}}
       # Encrypted DNS over TLS. Cloudflare only: Quad9's DoT (port 853) was
       # reset-by-peer on this ProtonVPN route, breaking tracker resolution.
       # Cloudflare resolves reliably here. (gluetun does DoT, not DoH.)
@@ -65,10 +64,10 @@ services:
       # WEBUI_BIND is "8080" (LAN) or "127.0.0.1:8080" (localhost / behind proxy)
       - "${WEBUI_BIND}:8080"
 
-    # --- storage: gluetun state + the shared file it writes the fwd port to ---
+    # --- storage: gluetun state + the port script it runs on the up-command ---
     volumes:
       - ./gluetun:/gluetun
-      - ./portsync:/portsync           # gluetun writes {{PORT}} -> /portsync/port
+      - ./scripts:/scripts:ro          # qbt-port.sh, run by the UP_COMMAND above
 
     # --- health: confirms the tunnel is actually up and routing ---
     healthcheck:
@@ -108,27 +107,3 @@ services:
       - type: bind
         source: ${DOWNLOADS_PATH}
         target: /downloads
-
-  # Keeps qBittorrent's listening port == gluetun's current ProtonVPN forwarded
-  # port. Runs in gluetun's netns (so qBittorrent is reachable on localhost:8080)
-  # and loops forever, applying /portsync/port whenever it differs — robust to
-  # slow startups, reconnects, reboots, and port changes. Needs qBittorrent's
-  # "Bypass authentication for localhost" toggle on.
-  port-sync:
-    image: alpine:latest                 # use :latest; pull to upgrade
-    container_name: qbt-port-sync
-    network_mode: "service:gluetun"
-    depends_on:
-      gluetun:
-        condition: service_healthy
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    mem_limit: 64m
-    pids_limit: 50
-    volumes:
-      - ./portsync:/portsync:ro          # reads the port gluetun writes
-      - ./scripts:/scripts:ro            # qbt-port-sync.sh (the reconcile loop)
-    command: ["/bin/sh", "/scripts/qbt-port-sync.sh"]
