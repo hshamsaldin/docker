@@ -16,9 +16,11 @@ PORT="${1:-}"
 URL="http://127.0.0.1:8080/api/v2/app/setPreferences"
 DATA="json={\"listen_port\":${PORT}}"
 
-# qBittorrent's WebUI may not be ready yet on first boot — retry a few times.
+# qBittorrent's WebUI can take a while to come up after a reboot (slow disk /
+# recheck), and gluetun won't re-run this until the port next changes — so retry
+# generously (60 x 5s = 5 min) to avoid leaving qBittorrent on a stale port.
 i=1
-while [ "$i" -le 12 ]; do
+while [ "$i" -le 60 ]; do
   if wget -q -O- --post-data="$DATA" "$URL" >/dev/null 2>&1; then
     echo "qbt-port: set qBittorrent listening port to $PORT"
     exit 0
