@@ -113,19 +113,25 @@ tar czf qbittorrent-$(date +%F).tar.gz -C ~/docker/qbittorrent/config .
   - qBittorrent is a linuxserver/s6 image; `cap_drop: ALL` and `read_only` are
     **not** applied (unverified against this image's init, and would risk a
     crash-loop). `no-new-privileges` is kept on both.
-  - `mem_limit` (256m gluetun / 1g qBittorrent) follows the baseline but, like
-    [jellyfin](../jellyfin), is **discarded on a Raspberry Pi** until the memory
-    cgroup is enabled in `/boot/firmware/cmdline.txt`.
+  - `mem_limit` (256m gluetun / 1g qBittorrent) is **enforced on this host** —
+    the memory cgroup was enabled by appending `cgroup_enable=memory
+    cgroup_memory=1` to the single line in `/boot/firmware/cmdline.txt` and
+    rebooting (a host-wide change that also activates Jellyfin's limit). Without
+    that, a Pi reports `Limitation discarded` and `docker stats` shows `0B`.
+    Containers must be **recreated** (`docker compose up -d --force-recreate`)
+    after enabling it to actually pick up the limit.
 - **Reverse proxy:** set `WEBUI_BIND=127.0.0.1:8080` in `.env` and front gluetun
   with your proxy; the qBittorrent WebUI lives in gluetun's netns.
 
 ---
 _Tested on: `raspberrypi` (Pi 4 Model B), 2026-06-28 — `docker compose up -d`
 brings **gluetun up healthy** and qBittorrent in its netns; the leak check
-`docker compose exec qbittorrent wget -qO- https://ipinfo.io/ip` returns a
-**Swiss ProtonVPN exit IP** (country `CH`), and qBittorrent's WebUI is reachable
-on `:8080` with the temp password from the logs. `mem_limit` is discarded until
-the memory cgroup is enabled (see Notes). Remaining checks (not yet run here):
-the stop-gluetun **kill-switch** test under Verify, and the **auto port-forward**
-(`scripts/qbt-port.sh` via `VPN_PORT_FORWARDING_UP_COMMAND`) — added after the
-first deploy, pending the one-time qBittorrent localhost-auth-bypass toggle._
+returns a **Swiss ProtonVPN exit IP** (country `CH`), no leak. **Auto
+port-forwarding verified end-to-end:** gluetun's ProtonVPN-forwarded port
+(`40798`) is pushed into qBittorrent by `scripts/qbt-port.sh` (via
+`VPN_PORT_FORWARDING_UP_COMMAND`) and `app/preferences` reports the matching
+`"listen_port":40798` — after enabling DAC_OVERRIDE (so gluetun can write its
+port file) and the one-time qBittorrent **"Bypass authentication for localhost"**
+toggle. **`mem_limit` enforced** (`146MiB/256MiB` gluetun, `24MiB/1GiB` qbit)
+once the memory cgroup was enabled + containers recreated (see Notes). Remaining
+optional check: the stop-gluetun **kill-switch** test under Verify._
