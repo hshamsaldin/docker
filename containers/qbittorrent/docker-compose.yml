@@ -21,11 +21,14 @@ services:
       - ALL
     cap_add:
       - NET_ADMIN                        # bring up the WireGuard interface
-      - DAC_OVERRIDE                     # gluetun creates /tmp/gluetun mode 0644
-                                         # (no exec bit) and writes runtime files
-                                         # there; under cap_drop ALL even root
-                                         # needs DAC_OVERRIDE to write into it,
-                                         # else port forwarding aborts.
+      - DAC_OVERRIDE                     # write into /tmp/gluetun (dir is mode
+                                         # 0644, no exec bit) — needed to create
+                                         # the runtime port file.
+      - CHOWN                            # gluetun then chowns that port file;
+                                         # without CHOWN the port-forwarding
+                                         # service aborts ("chown ... operation
+                                         # not permitted") and the up-command
+                                         # (which writes /portsync/port) never runs.
     devices:
       - /dev/net/tun:/dev/net/tun
     mem_limit: 256m
