@@ -133,8 +133,9 @@ brings **gluetun up healthy** and qBittorrent in its netns; the leak check
 returns a **Swiss ProtonVPN exit IP** (country `CH`), no leak. DNS via Cloudflare
 DoT resolves trackers reliably (Quad9 DoT was reset on this route). **`mem_limit`
 enforced** (`146MiB/256MiB` gluetun, `24MiB/1GiB` qbit) once the memory cgroup was
-enabled + containers recreated (see Notes); `DAC_OVERRIDE` lets gluetun write its
-forwarded-port file. **Port forwarding** is handled by the **`port-sync` sidecar**
-(replacing the one-shot up-command, which left qBittorrent on a stale port after
-restarts) — **pending host re-verification** of the sidecar. Remaining optional
-check: the stop-gluetun **kill-switch** test under Verify._
+enabled + containers recreated (see Notes). **Auto port-forwarding verified
+end-to-end:** with `DAC_OVERRIDE` + `CHOWN` the PF service no longer aborts, so
+gluetun's up-command runs `qbt-port.sh` on each port assign — confirmed by
+planting a wrong port (`12345`) and watching it auto-correct to the forwarded
+port (`36409`) with no manual action (gluetun logs `qbt-port: set ... to 36409`).
+Remaining optional check: the stop-gluetun **kill-switch** test under Verify._
