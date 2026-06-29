@@ -20,7 +20,7 @@ container below.
 |-----------|---------|-------|------|---------|
 | [netbird](containers/netbird) | WireGuard mesh VPN client | `netbirdio/netbird:latest` | — | `netbird-client` (volume) |
 | [atvloadly](containers/atvloadly) | Apple TV IPA sideloading | `bitxeno/atvloadly:latest` | 5533 | `/etc/atvloadly` (bind) |
-| [omada](containers/omada) | TP-Link Omada SDN controller ⚠️ UNTESTED | `mbentley/omada-controller:latest` | 8043 | `omada-data` (volume) |
+| [omada](containers/omada) | TP-Link Omada SDN controller | `mbentley/omada-controller:6.2` | 8043 | `omada-data` (volume) |
 | [jellyfin](containers/jellyfin) | Media server | `jellyfin/jellyfin:latest` | 8096 | `./config`, `./cache` (bind) |
 | [qbittorrent](containers/qbittorrent) | Torrent client behind ProtonVPN | `lscr.io/linuxserver/qbittorrent:latest` + `qmcgaw/gluetun:latest` | 8080 | `./config`, `./gluetun` (bind) |
 

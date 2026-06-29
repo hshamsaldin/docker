@@ -4,7 +4,7 @@
 # they are published on all interfaces (not bound to localhost like the standard).
 services:
   omada-controller:
-    image: mbentley/omada-controller:latest   # use :latest; `docker compose pull` to upgrade
+    image: mbentley/omada-controller:6.2   # PINNED, not :latest — mbentley's :latest tracks the 5.x line; see README
     container_name: Omada                      # = app name (brand-cased, like NetBird)
     restart: unless-stopped
     ulimits:
