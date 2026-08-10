@@ -94,6 +94,16 @@ Copy it off the host:
 scp <user>@<host>:~/atvloadly-backup-*-clean.tar.gz "C:\path\to\backups\"
 ```
 
+**Also back up `~/.pyatv.conf`** if you use `wake-appletv.sh` — it's the pyatv
+pairing credentials for the Apple TV, lives directly in the home dir (not under
+`/etc/atvloadly`, and not `~/.config/pyatv/` despite some docs), and isn't covered
+by the tar above:
+
+```bash
+cp ~/.pyatv.conf ~/atvloadly-backup-pyatv-$(date +%Y-%m-%d).conf
+scp <user>@<host>:~/atvloadly-backup-pyatv-*.conf "C:\path\to\backups\"
+```
+
 ### Restore
 
 On a fresh host (or after wiping `/etc/atvloadly`):
@@ -110,6 +120,16 @@ sudo docker logs -f atvloadly
 
 A successful restore shows `Restoring session for <your-apple-id>...` then device
 registration and install — with no pairing/login prompt in between.
+
+Restore `~/.pyatv.conf` too if you use `wake-appletv.sh`:
+
+```bash
+cp ~/atvloadly-backup-pyatv-YYYY-MM-DD.conf ~/.pyatv.conf
+~/atvloadly/pyatv-venv/bin/atvremote --scan-hosts <atv-ip> --id "<atv-id>" power_state
+```
+
+If that returns a real state (not an auth error), the credentials are valid and
+re-pairing isn't needed.
 
 If the archive is **corrupted/truncated**, `tar` processes entries sequentially,
 so you can still recover everything before the break:
