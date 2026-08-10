@@ -83,9 +83,14 @@ sudo tar -czf ~/atvloadly-backup-$(date +%Y-%m-%d)-clean.tar.gz \
   --exclude='ipa' --exclude='*.ipa' --exclude='tmp' --exclude='log' .
 ```
 
-Keeps: `PlumeImpactor/` (pairing record, `accounts.json` session, `adi.pb` +
-`keys/*/key.pem` Anisette identity, CoreADI/storeservicescore libs),
-`lockdown/SystemConfiguration.plist`, `app.db`, `settings.json`, `config.yaml`.
+Keeps (verified against a real archive listing, `tar -tzf`):
+- `PlumeImpactor/` — `identifier`, `accounts.json` (Apple ID session), `adi.pb` +
+  `keys/*/key.pem` (Anisette identity), `lib/*/lib{CoreADI,storeservicescore}.so`,
+  `pairing_files/*.{plist,json}` (the actual USB/network pairing record)
+- `DeveloperDiskImages/` — the tvOS Developer Disk Image atvloadly fetched for this
+  device's tvOS version; dropping it means a re-download on restore
+- `lockdown/SystemConfiguration.plist`, `app.db`, `app.log`, `settings.json`, `config.yaml`
+
 Drops: `ipa/` payloads, stray `*.ipa`, `tmp/`, `log/`.
 
 Copy it off the host:
