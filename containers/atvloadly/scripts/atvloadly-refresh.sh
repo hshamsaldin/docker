@@ -5,7 +5,7 @@
 set -uo pipefail
 BASE="http://localhost:5533"
 MCP="$BASE/mcp"
-LOG="$HOME/atvloadly-refresh.log"
+LOG="$HOME/atvloadly/atvloadly-refresh.log"
 TIMEOUT=300
 TS() { date '+%Y-%m-%d %H:%M:%S'; }
 enc() { python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$1"; }
@@ -55,7 +55,7 @@ for it in sc.get("items", []):
     lines.append("%s: %s" % (it.get("ipa_name"), mark))
 print("Atvloadly Refresh")
 if fail == 0:
-    print("Success - All apps refreshed successfully ✅")
+    print("All apps refreshed successfully ✅")
 else:
     print("Failed - %d of %d app(s) failed ❌ | %s" % (fail, total, " | ".join(lines)))
 ')

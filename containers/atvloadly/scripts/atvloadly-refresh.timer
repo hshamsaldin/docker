@@ -1,8 +1,8 @@
 [Unit]
-Description=Trigger atvloadly app refresh daily at 20:30
+Description=Trigger atvloadly app refresh every 4 days (3-day buffer before 7-day cert expiry)
 
 [Timer]
-OnCalendar=*-*-* 20:30:00
+OnCalendar=*-*-01/4 00:00:00
 Persistent=true
 
 [Install]
